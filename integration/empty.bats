@@ -2,8 +2,8 @@
 
 load test_helper
 
-@test "Runs successfully" {
-  ROADRUNNER_CONFIG= run $ROADRUNNER
+@test "empty: prints nothing" {
+  ROADRUNNER_PROMPT= run $ROADRUNNER_BIN
   assert_success
   assert_output ""
 }
