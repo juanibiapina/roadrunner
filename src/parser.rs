@@ -12,7 +12,20 @@ pub fn parse(value: &str) -> Prompt {
     prompt(value).unwrap().1
 }
 
-named!(literal<&str, Expr>, map!(alt!(tag!("[") | tag!("]")), Expr::Literal));
+named!(literal<&str, Expr>,
+        map!(
+            alt!(
+                tag!("[") |
+                tag!("]") |
+                tag!(" ") |
+                tag!(":") |
+                tag!("(") |
+                tag!(")") |
+                tag!("@")
+            ),
+            Expr::Literal
+        )
+);
 
 named!(placeholder<&str, Expr>, map!(delimited!(char!('%'), nom::alpha, char!('%')), Expr::Placeholder));
 
@@ -44,6 +57,7 @@ mod tests {
     fn test_literal() {
         assert_eq!(literal("[").unwrap(), ("", Expr::Literal("[")));
         assert_eq!(literal("]").unwrap(), ("", Expr::Literal("]")));
+        assert_eq!(literal(" ").unwrap(), ("", Expr::Literal(" ")));
     }
 
     #[test]
