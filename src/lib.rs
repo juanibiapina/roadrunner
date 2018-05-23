@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate nom;
 
-mod expr;
+mod types;
 mod parser;
 mod eval;
 

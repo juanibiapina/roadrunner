@@ -1,24 +1,31 @@
-use expr::*;
+use types::*;
 
-pub fn eval(expr: &Expr) -> String {
+pub fn eval(prompt: &Prompt) -> String {
+    prompt.exprs.iter().map(eval_top_level_expr).collect::<Vec<String>>().join("")
+}
+
+fn eval_top_level_expr(expr: &TopLevelExpr) -> String {
     match expr {
-        Expr::Prompt(expr) => expr.iter().map(eval).collect::<Vec<String>>().join(""),
-        Expr::Literal(value) => value.to_string(),
-        Expr::Section(expr) => eval(expr),
-        Expr::TaggedSpec(tag, expr) => eval_spec(tag, expr),
-        _ => panic!("invariant violated"),
+        TopLevelExpr::Expr(expr) => {
+            match expr {
+                Expr::Literal(value) => value.to_string(),
+                Expr::Placeholder(name) => eval_top_level_placeholder(name),
+            }
+        },
+        TopLevelExpr::Section(value) => {
+            eval_section(value)
+        }
     }
 }
 
-fn eval_spec(tag: &str, expr: &Expr) -> String {
-    match expr {
-        Expr::Spec(_) => {
-            match tag {
-                "git" => "git".to_owned(),
-                "rbenv" => "rbenv".to_owned(),
-                _ => "unsupported_tag".to_owned(),
-            }
-        },
-        _ => panic!("invariant violated"),
+fn eval_section(section: &Section) -> String {
+    match section.name {
+        "git" => "git".to_owned(),
+        "rbenv" => "rbenv".to_owned(),
+        _ => "unsupported_tag".to_owned(),
     }
+}
+
+fn eval_top_level_placeholder(name: &str) -> String {
+    name.to_string()
 }
