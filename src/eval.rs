@@ -1,4 +1,5 @@
 use types::*;
+use utils;
 
 pub fn eval(prompt: &Prompt) -> String {
     prompt.exprs.iter().map(eval_top_level_expr).collect::<Vec<String>>().join("")
@@ -27,5 +28,8 @@ fn eval_section(section: &Section) -> String {
 }
 
 fn eval_top_level_placeholder(name: &str) -> String {
-    name.to_string()
+    match name {
+        "hostname" => utils::hostname(),
+        _ => panic!("unsupported placeholder"),
+    }
 }
