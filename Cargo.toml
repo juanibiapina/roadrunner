@@ -4,3 +4,7 @@ version = "0.1.0"
 authors = ["Juan Ibiapina <juanibiapina@gmail.com>"]
 
 [dependencies]
+
+[dependencies.nom]
+version = "^4.0"
+features = ["regexp", "verbose-errors"]
