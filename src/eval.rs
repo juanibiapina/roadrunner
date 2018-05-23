@@ -31,6 +31,7 @@ fn eval_top_level_placeholder(name: &str) -> String {
     match name {
         "hostname" => utils::hostname(),
         "username" => utils::username(),
+        "cwd" => utils::cwd(),
         _ => panic!("unsupported placeholder"),
     }
 }

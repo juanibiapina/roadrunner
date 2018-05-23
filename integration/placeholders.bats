@@ -15,3 +15,10 @@ load test_helper
   assert_success
   assert_output "$(hostname -s)"
 }
+
+@test "placeholders: cwd" {
+  ROADRUNNER_PROMPT="%cwd%" run $ROADRUNNER_BIN
+
+  assert_success
+  assert_output "$PWD"
+}
