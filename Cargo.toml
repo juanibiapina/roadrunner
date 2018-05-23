@@ -5,6 +5,7 @@ authors = ["Juan Ibiapina <juanibiapina@gmail.com>"]
 
 [dependencies]
 hostname = "*"
+users = "*"
 
 [dependencies.nom]
 version = "^4.0"

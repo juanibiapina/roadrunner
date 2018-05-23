@@ -30,6 +30,7 @@ fn eval_section(section: &Section) -> String {
 fn eval_top_level_placeholder(name: &str) -> String {
     match name {
         "hostname" => utils::hostname(),
+        "username" => utils::username(),
         _ => panic!("unsupported placeholder"),
     }
 }
