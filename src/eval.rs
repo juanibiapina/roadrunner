@@ -22,7 +22,7 @@ fn eval_section(section: &Section) -> String {
     match section.name {
         "git" => "git".to_owned(),
         "rbenv" => "rbenv".to_owned(),
-        _ => "unsupported_tag".to_owned(),
+        _ => panic!("unsupported section"),
     }
 }
 
