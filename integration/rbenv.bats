@@ -16,7 +16,7 @@ run_with_rbenv() {
   assert_output ""
 }
 
-@test "git: when in a rbenv repo" {
+@test "rbenv: when in a rbenv repo" {
   create_dir "ruby-project"
   cd_local "ruby-project"
   echo 2.5.1 > .ruby-version
