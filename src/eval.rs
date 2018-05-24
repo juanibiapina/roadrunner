@@ -17,8 +17,8 @@ fn eval_top_level_expr(expr: &TopLevelExpr) -> String {
     match expr {
         TopLevelExpr::Expr(expr) => {
             match expr {
-                Expr::Literal(value) => value.to_string(),
-                Expr::Placeholder(name) => eval_top_level_placeholder(name),
+                Expr::Literal(literal) => literal.0.to_string(),
+                Expr::Placeholder(placeholder) => eval_top_level_placeholder(placeholder.0),
             }
         },
         TopLevelExpr::Section(value) => {
@@ -60,10 +60,10 @@ fn eval_top_level_placeholder(name: &str) -> String {
 
 fn eval_git(repo: &Repository, expr: &Expr) -> String {
     match expr {
-        Expr::Literal(value) => value.to_string(),
-        Expr::Placeholder(name) => {
-            match name {
-                &"branch" => {
+        Expr::Literal(literal) => literal.0.to_string(),
+        Expr::Placeholder(placeholder) => {
+            match placeholder.0 {
+                "branch" => {
                     repo.head().unwrap().shorthand().unwrap().to_string()
                 },
                 _ => panic!("unsupported integration placeholder"),
@@ -74,10 +74,10 @@ fn eval_git(repo: &Repository, expr: &Expr) -> String {
 
 fn eval_rbenv(expr: &Expr) -> String {
     match expr {
-        Expr::Literal(value) => value.to_string(),
-        Expr::Placeholder(name) => {
-            match name {
-                &"version" => {
+        Expr::Literal(literal) => literal.0.to_string(),
+        Expr::Placeholder(placeholder) => {
+            match placeholder.0 {
+                "version" => {
                     let version_file = Path::new(".ruby-version");
                     let mut file = File::open(version_file).unwrap();
 

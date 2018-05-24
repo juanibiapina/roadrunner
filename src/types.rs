@@ -1,7 +1,13 @@
 #[derive(PartialEq, Debug)]
+pub struct Literal<'a>(pub &'a str);
+
+#[derive(PartialEq, Debug)]
+pub struct Placeholder<'a>(pub &'a str);
+
+#[derive(PartialEq, Debug)]
 pub enum Expr<'a> {
-    Literal(&'a str),
-    Placeholder(&'a str),
+    Literal(Literal<'a>),
+    Placeholder(Placeholder<'a>),
 }
 
 #[derive(PartialEq, Debug)]
