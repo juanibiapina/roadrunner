@@ -7,6 +7,9 @@ run_with_git_config() {
 }
 
 @test "git: when not in a git repo" {
+  create_dir "non-git"
+  cd_local "non-git"
+
   run_with_git_config
 
   assert_success

@@ -1,3 +1,7 @@
+extern crate git2;
+
+use self::git2::Repository;
+
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
@@ -25,7 +29,14 @@ fn eval_top_level_expr(expr: &TopLevelExpr) -> String {
 
 fn eval_section(section: &Section) -> String {
     match section.name {
-        "git" => "git".to_owned(),
+        "git" => {
+            let repo = match Repository::open(".") {
+                Ok(repo) => repo,
+                Err(_) => return "".to_owned(),
+            };
+
+            section.exprs.iter().map(|expr| eval_git(&repo, expr)).collect::<Vec<String>>().join("")
+        },
         "rbenv" => {
             let version_file = Path::new(".ruby-version");
             if ! version_file.exists() {
@@ -44,6 +55,20 @@ fn eval_top_level_placeholder(name: &str) -> String {
         "username" => utils::username(),
         "cwd" => utils::cwd(),
         _ => panic!("unsupported placeholder"),
+    }
+}
+
+fn eval_git(repo: &Repository, expr: &Expr) -> String {
+    match expr {
+        Expr::Literal(value) => value.to_string(),
+        Expr::Placeholder(name) => {
+            match name {
+                &"branch" => {
+                    repo.head().unwrap().shorthand().unwrap().to_string()
+                },
+                _ => panic!("unsupported integration placeholder"),
+            }
+        },
     }
 }
 
