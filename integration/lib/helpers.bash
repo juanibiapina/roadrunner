@@ -9,6 +9,11 @@ create_git_origin() {
   cd -
 }
 
+create_dir() {
+  local name="$1"
+  mkdir -p "${ROADRUNNER_LOCAL_DIR}/$name"
+}
+
 clone_origin() {
   local name="$1"
   cd "${ROADRUNNER_LOCAL_DIR}"
