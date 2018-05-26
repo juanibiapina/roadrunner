@@ -63,6 +63,7 @@ Triggers when current directory is a git repository. Placeholders:
 
 #### rbenv section
 
-Triggers when current directory contains a `.ruby-version` file
+Triggers when current directory or any of its ancestors contains a
+`.ruby-version` file
 
 - `%version%`: The contents of the `.ruby-version` file

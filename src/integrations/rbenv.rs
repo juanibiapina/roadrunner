@@ -1,3 +1,4 @@
+use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
@@ -11,16 +12,20 @@ pub struct Rbenv {
 
 impl Rbenv {
     pub fn new() -> Option<Rbenv> {
-        let mut version_file = PathBuf::new();
-        version_file.push(".ruby-version");
+        let path = env::current_dir().unwrap();
 
-        if version_file.exists() {
-            Some(Rbenv {
-                version_file: version_file,
-            })
-        } else {
-            None
+        for path in path.ancestors() {
+            let mut version_file = PathBuf::from(path);
+            version_file.push(".ruby-version");
+
+            if version_file.exists() {
+                return Some(Rbenv {
+                    version_file: version_file,
+                });
+            }
         }
+
+        None
     }
 }
 
