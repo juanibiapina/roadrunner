@@ -1,11 +1,4 @@
-extern crate git2;
-
-use self::git2::Repository;
-
-use std::path::Path;
-use std::fs::File;
-use std::io::Read;
-
+use integrations;
 use types::*;
 use utils;
 
@@ -28,25 +21,18 @@ fn eval_top_level_expr(expr: &TopLevelExpr) -> String {
 }
 
 fn eval_section(section: &Section) -> String {
-    match section.name {
-        "git" => {
-            let repo = match Repository::open(".") {
-                Ok(repo) => repo,
-                Err(_) => return "".to_owned(),
-            };
-
-            section.exprs.iter().map(|expr| eval_git(&repo, expr)).collect::<Vec<String>>().join("")
-        },
-        "rbenv" => {
-            let version_file = Path::new(".ruby-version");
-            if ! version_file.exists() {
-                return "".to_owned();
-            }
-
-            section.exprs.iter().map(eval_rbenv).collect::<Vec<String>>().join("")
-        },
+    let integration: Option<Box<Integration>> = match section.name {
+        "git" => integrations::git::Git::new().map(|i| Box::new(i) as Box<Integration>),
+        "rbenv" => integrations::rbenv::Rbenv::new().map(|i| Box::new(i) as Box<Integration>),
         _ => panic!("unsupported section"),
-    }
+    };
+
+    let integration = match integration {
+        Some(integration) => integration,
+        None => return "".to_owned(),
+    };
+
+    section.exprs.iter().map(|expr| eval_in_integration(expr, &integration)).collect::<Vec<String>>().join("")
 }
 
 fn eval_top_level_placeholder(name: &str) -> String {
@@ -58,35 +44,11 @@ fn eval_top_level_placeholder(name: &str) -> String {
     }
 }
 
-fn eval_git(repo: &Repository, expr: &Expr) -> String {
+fn eval_in_integration(expr: &Expr, integration: &Box<Integration>) -> String {
     match expr {
         Expr::Literal(literal) => literal.0.to_string(),
         Expr::Placeholder(placeholder) => {
-            match placeholder.0 {
-                "branch" => {
-                    repo.head().unwrap().shorthand().unwrap().to_string()
-                },
-                _ => panic!("unsupported integration placeholder"),
-            }
-        },
-    }
-}
-
-fn eval_rbenv(expr: &Expr) -> String {
-    match expr {
-        Expr::Literal(literal) => literal.0.to_string(),
-        Expr::Placeholder(placeholder) => {
-            match placeholder.0 {
-                "version" => {
-                    let version_file = Path::new(".ruby-version");
-                    let mut file = File::open(version_file).unwrap();
-
-                    let mut contents = String::new();
-                    file.read_to_string(&mut contents).unwrap();
-                    contents.trim().to_string()
-                },
-                _ => panic!("unsupported integration placeholder"),
-            }
+            integration.eval(placeholder)
         },
     }
 }

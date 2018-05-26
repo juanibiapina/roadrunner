@@ -26,3 +26,7 @@ pub enum TopLevelExpr<'a> {
 pub struct Prompt<'a> {
     pub exprs: Vec<TopLevelExpr<'a>>,
 }
+
+pub trait Integration {
+    fn eval(&self, expr: &Placeholder) -> String;
+}
