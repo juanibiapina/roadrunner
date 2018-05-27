@@ -31,7 +31,8 @@ named!(literal<&str, Expr>,
                 tag!(":") |
                 tag!("(") |
                 tag!(")") |
-                tag!("@")
+                tag!("@") |
+                tag!("\n")
             ),
             |c| Expr::Literal(Literal(c))
         )
@@ -69,6 +70,7 @@ mod tests {
         assert_eq!(literal("[").unwrap(), ("", Expr::Literal(Literal("["))));
         assert_eq!(literal("]").unwrap(), ("", Expr::Literal(Literal("]"))));
         assert_eq!(literal(" ").unwrap(), ("", Expr::Literal(Literal(" "))));
+        assert_eq!(literal("\n").unwrap(), ("", Expr::Literal(Literal("\n"))));
     }
 
     #[test]

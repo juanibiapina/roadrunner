@@ -2,9 +2,18 @@
 
 load test_helper
 
-@test "literals" {
+@test "literals: symbols" {
   ROADRUNNER_PROMPT="[@]:()" run $ROADRUNNER_BIN
 
   assert_success
   assert_output "[@]:()"
+}
+
+@test "literals: newline" {
+  ROADRUNNER_PROMPT="
+:) " run $ROADRUNNER_BIN
+
+  assert_success
+  assert_output "
+:) "
 }

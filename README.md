@@ -5,7 +5,8 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT="[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[%version%] }{blue}%cwd%{reset}{git: ({magenta}%branch%{reset})}{reset}]"
+$ export ROADRUNNER_PROMPT='[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[%version%] }{blue}%cwd%{reset}{git: ({magenta}%branch%{reset})}{reset}]
+:) '
 $ roadrunner
 ```
 
@@ -13,6 +14,7 @@ Output (with colors stripped):
 
 ```
 [juanibiapina@MacBookPro:[2.5.1] /Users/juanibiapina/roadrunner (master)]
+:) 
 ```
 
 ## Syntax
@@ -26,7 +28,7 @@ Literals as written out exactly as passed. The following characters are
 accepted:
 
 ```
-[] : () @ <space>
+[] : () @ <space> <newline>
 ```
 
 Pull requests to handle other characters and alphanumeric in general are
