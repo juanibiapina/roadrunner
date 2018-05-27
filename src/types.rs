@@ -5,7 +5,27 @@ pub struct Literal<'a>(pub &'a str);
 pub struct Placeholder<'a>(pub &'a str);
 
 #[derive(PartialEq, Debug)]
+pub enum ColorName {
+    Reset,
+    Black,
+    Red,
+    Green,
+    Yellow,
+    Blue,
+    Magenta,
+    Cyan,
+    White,
+}
+
+#[derive(PartialEq, Debug)]
+pub enum Color {
+    Ansi(u8),
+    Name(ColorName),
+}
+
+#[derive(PartialEq, Debug)]
 pub enum Expr<'a> {
+    Color(Color),
     Literal(Literal<'a>),
     Placeholder(Placeholder<'a>),
 }
@@ -29,4 +49,19 @@ pub struct Prompt<'a> {
 
 pub trait Integration {
     fn eval(&self, expr: &Placeholder) -> String;
+}
+
+pub fn color_name(n: &str) -> ColorName {
+    match n {
+        "reset" => ColorName::Reset,
+        "black" => ColorName::Black,
+        "red" => ColorName::Red,
+        "green" => ColorName::Green,
+        "yellow" => ColorName::Yellow,
+        "blue" => ColorName::Blue,
+        "magenta" => ColorName::Magenta,
+        "cyan" => ColorName::Cyan,
+        "white" => ColorName::White,
+        _ => panic!("unsupported color"),
+    }
 }

@@ -7,6 +7,7 @@ authors = ["Juan Ibiapina <juanibiapina@gmail.com>"]
 hostname = "*"
 users = "*"
 git2 = "*"
+termion = "*"
 
 [dependencies.nom]
 version = "^4.0"
