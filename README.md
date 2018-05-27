@@ -13,7 +13,7 @@ $ roadrunner
 Output (with colors stripped):
 
 ```
-[juanibiapina@MacBookPro:[Ruby 2.5.1] /Users/juanibiapina/roadrunner (master ●2+3…)]
+[juanibiapina@MacBookPro:[Ruby 2.5.1] ~/roadrunner (master ●2+3…)]
 :) 
 ```
 
