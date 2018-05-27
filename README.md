@@ -5,7 +5,7 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[Ruby %version%] }{blue}%cwd%{reset}{git: ({magenta}%branch%{reset})}{reset}]
+$ export ROADRUNNER_PROMPT='[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[Ruby %version%] }{blue}%cwd%{reset}{git: ({magenta}%branch% {green}%index%{red}%wt%{reset}%untracked%{green}%clean%{reset})}{reset}]
 :) '
 $ roadrunner
 ```
@@ -13,7 +13,7 @@ $ roadrunner
 Output (with colors stripped):
 
 ```
-[juanibiapina@MacBookPro:[Ruby 2.5.1] /Users/juanibiapina/roadrunner (master)]
+[juanibiapina@MacBookPro:[Ruby 2.5.1] /Users/juanibiapina/roadrunner (master ●2+3…)]
 :) 
 ```
 
@@ -70,6 +70,10 @@ Triggers when current directory or any of its ancestors is a git repository.
 Placeholders:
 
 - `%branch%`: Current git branch name
+- `%index%`: Number of files changed in index (staged) preceeded by `●`
+- `%wt%`: Number of files changed in working tree preceeded by `+`
+- `%untracked%`: Displays `…` if there are untracked files
+- `%clean%`: Displays `✓` if there are no changes in index or working directory and no untracked files
 
 #### rbenv section
 

@@ -3,7 +3,7 @@
 load test_helper
 
 run_with_git_config() {
-  ROADRUNNER_PROMPT="{git:(%branch%)}" run $ROADRUNNER_BIN
+  ROADRUNNER_PROMPT="{git:(%branch% %index%%wt%%untracked%%clean%)}" run $ROADRUNNER_BIN
 }
 
 @test "git: when not in a git repo" {
@@ -22,12 +22,31 @@ run_with_git_config() {
   cd_local "repo"
 
   run_with_git_config
-
   assert_success
-  assert_output "(master)"
+  assert_output "(master ✓)"
+
+  echo "line" >> README
+  run_with_git_config
+  assert_success
+  assert_output "(master +1)"
+
+  echo "other" >> FILE
+  run_with_git_config
+  assert_success
+  assert_output "(master +2)"
+
+  git add README
+  run_with_git_config
+  assert_success
+  assert_output "(master ●1+1)"
+
+  touch ANOTHER
+  run_with_git_config
+  assert_success
+  assert_output "(master ●1+1…)"
 }
 
-@test "git: when in a subdirectory of git repo" {
+@test "git: when in a subdirectory of a git repo" {
   create_git_origin "repo"
   clone_origin "repo"
   cd_local "repo"
@@ -37,5 +56,5 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "(master)"
+  assert_output "(master ✓)"
 }

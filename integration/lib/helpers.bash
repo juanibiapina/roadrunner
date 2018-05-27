@@ -4,6 +4,7 @@ create_git_origin() {
   cd "${ROADRUNNER_ORIGIN_DIR}/$name"
   git init .
   touch README
+  touch FILE
   git add .
   git commit -m "Initial commit"
   cd -
