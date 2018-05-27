@@ -1,5 +1,5 @@
 #[derive(PartialEq, Debug)]
-pub struct Literal<'a>(pub &'a str);
+pub struct Literal(pub char);
 
 #[derive(PartialEq, Debug)]
 pub struct Placeholder<'a>(pub &'a str);
@@ -26,7 +26,7 @@ pub enum Color {
 #[derive(PartialEq, Debug)]
 pub enum Expr<'a> {
     Color(Color),
-    Literal(Literal<'a>),
+    Literal(Literal),
     Placeholder(Placeholder<'a>),
 }
 

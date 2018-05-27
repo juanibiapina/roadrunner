@@ -24,16 +24,7 @@ named!(color<&str, Expr>,
 
 named!(literal<&str, Expr>,
         map!(
-            alt!(
-                tag!("[") |
-                tag!("]") |
-                tag!(" ") |
-                tag!(":") |
-                tag!("(") |
-                tag!(")") |
-                tag!("@") |
-                tag!("\n")
-            ),
+            none_of!("{}%"),
             |c| Expr::Literal(Literal(c))
         )
 );
@@ -67,10 +58,12 @@ mod tests {
 
     #[test]
     fn test_literal() {
-        assert_eq!(literal("[").unwrap(), ("", Expr::Literal(Literal("["))));
-        assert_eq!(literal("]").unwrap(), ("", Expr::Literal(Literal("]"))));
-        assert_eq!(literal(" ").unwrap(), ("", Expr::Literal(Literal(" "))));
-        assert_eq!(literal("\n").unwrap(), ("", Expr::Literal(Literal("\n"))));
+        assert_eq!(literal("S").unwrap(), ("", Expr::Literal(Literal('S'))));
+        assert_eq!(literal("a").unwrap(), ("", Expr::Literal(Literal('a'))));
+        assert_eq!(literal("[").unwrap(), ("", Expr::Literal(Literal('['))));
+        assert_eq!(literal("]").unwrap(), ("", Expr::Literal(Literal(']'))));
+        assert_eq!(literal(" ").unwrap(), ("", Expr::Literal(Literal(' '))));
+        assert_eq!(literal("\n").unwrap(), ("", Expr::Literal(Literal('\n'))));
     }
 
     #[test]
@@ -90,17 +83,17 @@ mod tests {
 
     #[test]
     fn test_spec() {
-        assert_eq!(spec("[%hi%]").unwrap(), ("", vec!(Expr::Literal(Literal("[")), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]")))));
+        assert_eq!(spec("[%hi%]").unwrap(), ("", vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']')))));
     }
 
     #[test]
     fn test_tagged_spec() {
-        assert_eq!(tagged_spec("git:[%hi%]").unwrap(), ("", ("git", vec!(Expr::Literal(Literal("[")), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]"))))));
+        assert_eq!(tagged_spec("git:[%hi%]").unwrap(), ("", ("git", vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))))));
     }
 
     #[test]
     fn test_section() {
-        assert_eq!(section("{git:[%hi%]}").unwrap(), ("", Section { name: "git", exprs: vec!(Expr::Literal(Literal("[")), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]"))) }));
+        assert_eq!(section("{git:[%hi%]}").unwrap(), ("", Section { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) }));
     }
 
     #[test]
@@ -115,14 +108,14 @@ mod tests {
                 ]
             }),
             TopLevelExpr::Expr(Expr::Color(Color::Ansi(22))),
-            TopLevelExpr::Expr(Expr::Literal(Literal("["))),
-            TopLevelExpr::Expr(Expr::Literal(Literal("]"))),
+            TopLevelExpr::Expr(Expr::Literal(Literal('['))),
+            TopLevelExpr::Expr(Expr::Literal(Literal(']'))),
             TopLevelExpr::Section(Section {
                 name: "git",
                 exprs: vec![
-                    Expr::Literal(Literal("[")),
+                    Expr::Literal(Literal('[')),
                     Expr::Placeholder(Placeholder("hi")),
-                    Expr::Literal(Literal("]"))
+                    Expr::Literal(Literal(']'))
                 ]
             })
         ]}));

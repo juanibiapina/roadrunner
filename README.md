@@ -5,7 +5,7 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[%version%] }{blue}%cwd%{reset}{git: ({magenta}%branch%{reset})}{reset}]
+$ export ROADRUNNER_PROMPT='[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[Ruby %version%] }{blue}%cwd%{reset}{git: ({magenta}%branch%{reset})}{reset}]
 :) '
 $ roadrunner
 ```
@@ -13,7 +13,7 @@ $ roadrunner
 Output (with colors stripped):
 
 ```
-[juanibiapina@MacBookPro:[2.5.1] /Users/juanibiapina/roadrunner (master)]
+[juanibiapina@MacBookPro:[Ruby 2.5.1] /Users/juanibiapina/roadrunner (master)]
 :) 
 ```
 
@@ -24,15 +24,11 @@ are four types of expressions: literals, placeholders, sections and colors.
 
 ### Literals
 
-Literals as written out exactly as passed. The following characters are
-accepted:
+Literals as written out exactly as passed. All characters are allowed except:
 
-```
-[] : () @ <space> <newline>
-```
-
-Pull requests to handle other characters and alphanumeric in general are
-welcome.
+- `{`
+- `}`
+- `%`
 
 ### Placeholders
 
