@@ -77,7 +77,7 @@ Placeholders:
 
 #### rbenv section
 
-Triggers when current directory or any of its ancestors contains a
+Triggers when current directory or any of its ancestors contain a
 `.ruby-version` file
 
 - `%version%`: The contents of the `.ruby-version` file
