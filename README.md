@@ -66,7 +66,8 @@ color ANSI code. Examples:
 
 #### git section
 
-Triggers when current directory is a git repository. Placeholders:
+Triggers when current directory or any of its ancestors is a git repository.
+Placeholders:
 
 - `%branch%`: Current git branch name
 

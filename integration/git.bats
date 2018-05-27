@@ -26,3 +26,16 @@ run_with_git_config() {
   assert_success
   assert_output "(master)"
 }
+
+@test "git: when in a subdirectory of git repo" {
+  create_git_origin "repo"
+  clone_origin "repo"
+  cd_local "repo"
+  mkdir -p "subdir"
+  cd "subdir"
+
+  run_with_git_config
+
+  assert_success
+  assert_output "(master)"
+}

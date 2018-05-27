@@ -11,7 +11,7 @@ pub struct Git {
 
 impl Git {
     pub fn new() -> Option<Git> {
-        Repository::open(".").ok().map(|repo| Git { repo: repo })
+        Repository::discover(".").ok().map(|repo| Git { repo: repo })
     }
 }
 
