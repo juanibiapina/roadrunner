@@ -20,5 +20,13 @@ load test_helper
   ROADRUNNER_PROMPT="%cwd%" run $ROADRUNNER_BIN
 
   assert_success
-  assert_output "$PWD"
+  assert_output "$(dirs +0)"
+}
+
+@test "placeholders: cwd inside HOME directory" {
+  cd
+  ROADRUNNER_PROMPT="%cwd%" run $ROADRUNNER_BIN
+
+  assert_success
+  assert_output "~"
 }

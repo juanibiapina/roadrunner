@@ -35,7 +35,7 @@ Literals as written out exactly as passed. All characters are allowed except:
 Placeholders are surrounded by `%`. They are predefined and will cause an error
 if they cannot be resolved. Currently available placeholders are:
 
-- `%cwd%`: Path of current working directory
+- `%cwd%`: Path of current working directory ($HOME is replaced with `~`)
 - `%hostname%`: Machine hostname
 - `%username%`: Current user name
 
