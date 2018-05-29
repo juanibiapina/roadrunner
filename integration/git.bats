@@ -3,7 +3,7 @@
 load test_helper
 
 run_with_git_config() {
-  ROADRUNNER_PROMPT="{git:(%branch% %index%%wt%%untracked%%clean%)}" run $ROADRUNNER_BIN
+  ROADRUNNER_PROMPT="{git:(%head% %index%%wt%%untracked%%clean%)}" run $ROADRUNNER_BIN
 }
 
 @test "git: when not in a git repo" {

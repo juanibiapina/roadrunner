@@ -5,7 +5,7 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[Ruby %version%] }{blue}%cwd%{reset}{git: ({magenta}%branch% {green}%index%{red}%wt%{reset}%untracked%{green}%clean%{reset})}{reset}]
+$ export ROADRUNNER_PROMPT='[{red}%username%{reset}@{magenta}%hostname%{reset}:{rbenv:{green}[Ruby %version%] }{blue}%cwd%{reset}{git: ({magenta}%head% {green}%index%{red}%wt%{reset}%untracked%{green}%clean%{reset})}{reset}]
 :) '
 $ roadrunner
 ```
@@ -47,10 +47,10 @@ rendered at all. After the tag followed by a `:`, any literals or colors are
 allowed plus any placeholders defined by that specific section. Example:
 
 ```
-$ export ROADRUNNER_PROMPT="{git:(%branch%)}"
+$ export ROADRUNNER_PROMPT="{git:(%head%)}"
 ```
 
-This outputs the current git branch in parenthesis if inside a git repository.
+This outputs the current git HEAD in parenthesis if inside a git repository.
 Otherwise it prints nothing.
 
 ### Colors
@@ -69,7 +69,7 @@ color ANSI code. Examples:
 Triggers when current directory or any of its ancestors is a git repository.
 Placeholders:
 
-- `%branch%`: Current git branch name
+- `%head%`: Current git HEAD (usually current branch name)
 - `%index%`: Number of files changed in index (staged) preceeded by `●`
 - `%wt%`: Number of files changed in working tree preceeded by `+`
 - `%untracked%`: Displays `…` if there are untracked files
