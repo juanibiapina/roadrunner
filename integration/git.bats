@@ -58,3 +58,14 @@ run_with_git_config() {
   assert_success
   assert_output "(master ✓)"
 }
+
+@test "git: when in a git repo without any branches" {
+  create_dir "non-git"
+  cd_local "non-git"
+  git init .
+
+  run_with_git_config
+
+  assert_success
+  assert_output "(UNBORN ✓)"
+}

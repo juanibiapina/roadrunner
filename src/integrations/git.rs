@@ -2,6 +2,7 @@ extern crate git2;
 
 use self::git2::Repository;
 use self::git2::Status;
+use self::git2::ErrorCode;
 
 use types::Integration;
 use types::Placeholder;
@@ -68,7 +69,11 @@ impl Integration for Git {
     fn eval(&self, placeholder: &Placeholder) -> String {
         match placeholder.0 {
             "branch" => {
-                self.repo.head().unwrap().shorthand().unwrap().to_string()
+                match self.repo.head() {
+                    Ok(head) => head.shorthand().unwrap().to_owned(),
+                    Err(ref e) if e.code() == ErrorCode::UnbornBranch => "UNBORN".to_owned(),
+                    Err(_) => panic!("invalid git head"),
+                }
             },
             "index" => {
                 if self.index > 0 {
