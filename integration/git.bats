@@ -3,7 +3,7 @@
 load test_helper
 
 run_with_git_config() {
-  ROADRUNNER_PROMPT="{git:(%head% %index%%wt%%untracked%%clean%)}" run $ROADRUNNER_BIN
+  ROADRUNNER_PROMPT="{git:(%head% %commits% %index%%wt%%untracked%%clean%)}" run $ROADRUNNER_BIN
 }
 
 @test "git: when not in a git repo" {
@@ -19,31 +19,40 @@ run_with_git_config() {
 @test "git: when in a git repo" {
   create_git_origin "repo"
   clone_origin "repo"
+  cd_origin "repo"
+  touch EXTRA
+  git add EXTRA
+  git commit -m EXTRA
+
   cd_local "repo"
+  echo line > EXTRA
+  git add EXTRA
+  git commit -m EXTRA
+  git fetch
 
   run_with_git_config
   assert_success
-  assert_output "(master ✓)"
+  assert_output "(master ↓1↑1 ✓)"
 
   echo "line" >> README
   run_with_git_config
   assert_success
-  assert_output "(master +1)"
+  assert_output "(master ↓1↑1 +1)"
 
   echo "other" >> FILE
   run_with_git_config
   assert_success
-  assert_output "(master +2)"
+  assert_output "(master ↓1↑1 +2)"
 
   git add README
   run_with_git_config
   assert_success
-  assert_output "(master ●1+1)"
+  assert_output "(master ↓1↑1 ●1+1)"
 
   touch ANOTHER
   run_with_git_config
   assert_success
-  assert_output "(master ●1+1…)"
+  assert_output "(master ↓1↑1 ●1+1…)"
 }
 
 @test "git: when in a subdirectory of a git repo" {
@@ -56,7 +65,7 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "(master ✓)"
+  assert_output "(master  ✓)"
 }
 
 @test "git: when in a git repo without any branches" {
@@ -67,7 +76,7 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "(UNBORN ✓)"
+  assert_output "(UNBORN  ✓)"
 }
 
 @test "git: when in a git repo with a detached head" {
@@ -80,5 +89,5 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "($commit ✓)"
+  assert_output "($commit  ✓)"
 }

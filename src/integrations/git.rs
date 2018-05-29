@@ -1,8 +1,12 @@
 extern crate git2;
 
+use std::collections::BTreeSet;
+
 use self::git2::Repository;
 use self::git2::Status;
 use self::git2::ErrorCode;
+use self::git2::BranchType;
+use self::git2::Oid;
 
 use types::Integration;
 use types::Placeholder;
@@ -83,6 +87,56 @@ impl Integration for Git {
                         Err(ref e) if e.code() == ErrorCode::UnbornBranch => "UNBORN".to_owned(),
                         Err(_) => panic!("invalid git head"),
                     }
+                }
+            },
+            "commits" => {
+                if self.repo.head_detached().unwrap() {
+                    return "".to_owned();
+                }
+
+                match self.repo.head() {
+                    Ok(head) => {
+                        if ! head.is_branch() {
+                            return "".to_owned();
+                        }
+
+                        let branch_name = head.name().unwrap();
+                        let branch = self.repo.find_branch(&branch_name[11..], BranchType::Local).unwrap();
+                        let remote_branch = branch.upstream().unwrap();
+
+                        let left_id = branch.get().target().unwrap();
+                        let right_id = remote_branch.get().target().unwrap();
+
+                        let merge_base_id = self.repo.merge_base(left_id, right_id).unwrap();
+
+                        let mut revwalk_left = self.repo.revwalk().unwrap();
+                        revwalk_left.push(left_id).unwrap();
+                        revwalk_left.push(merge_base_id).unwrap();
+
+                        let mut revwalk_right = self.repo.revwalk().unwrap();
+                        revwalk_right.push(right_id).unwrap();
+                        revwalk_right.push(merge_base_id).unwrap();
+
+                        let local_commits = revwalk_left.map(|r| r.unwrap()).collect::<BTreeSet<Oid>>();
+                        let remote_commits = revwalk_right.map(|r| r.unwrap()).collect::<BTreeSet<Oid>>();
+
+                        let ahead = local_commits.difference(&remote_commits).count();
+                        let behind = remote_commits.difference(&local_commits).count();
+
+                        let mut result = String::new();
+
+                        if behind > 0 {
+                            result.push_str(&format!("↓{}", behind));
+                        }
+
+                        if ahead > 0 {
+                            result.push_str(&format!("↑{}", ahead));
+                        }
+
+                        result
+                    },
+                    Err(ref e) if e.code() == ErrorCode::UnbornBranch => "".to_owned(),
+                    Err(_) => panic!("invalid git head"),
                 }
             },
             "index" => {

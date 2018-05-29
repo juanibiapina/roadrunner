@@ -24,6 +24,11 @@ clone_origin() {
   cd -
 }
 
+cd_origin() {
+  local name="$1"
+  cd "${ROADRUNNER_ORIGIN_DIR}/$name"
+}
+
 cd_local() {
   local name="$1"
   cd "${ROADRUNNER_LOCAL_DIR}/$name"
