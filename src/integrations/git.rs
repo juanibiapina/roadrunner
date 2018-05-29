@@ -69,10 +69,20 @@ impl Integration for Git {
     fn eval(&self, placeholder: &Placeholder) -> String {
         match placeholder.0 {
             "head" => {
-                match self.repo.head() {
-                    Ok(head) => head.shorthand().unwrap().to_owned(),
-                    Err(ref e) if e.code() == ErrorCode::UnbornBranch => "UNBORN".to_owned(),
-                    Err(_) => panic!("invalid git head"),
+                if self.repo.head_detached().unwrap() {
+                    match self.repo.head() {
+                        Ok(head) => {
+                            let commit = self.repo.find_commit(head.target().unwrap()).unwrap();
+                            commit.as_object().short_id().unwrap().as_str().unwrap().to_owned()
+                        },
+                        Err(_) => panic!("invalid git head"),
+                    }
+                } else {
+                    match self.repo.head() {
+                        Ok(head) => head.shorthand().unwrap().to_owned(),
+                        Err(ref e) if e.code() == ErrorCode::UnbornBranch => "UNBORN".to_owned(),
+                        Err(_) => panic!("invalid git head"),
+                    }
                 }
             },
             "index" => {

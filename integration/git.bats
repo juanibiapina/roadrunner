@@ -69,3 +69,16 @@ run_with_git_config() {
   assert_success
   assert_output "(UNBORN ✓)"
 }
+
+@test "git: when in a git repo with a detached head" {
+  create_git_origin "repo"
+  clone_origin "repo"
+  cd_local "repo"
+  commit="$(git log --pretty=format:'%h' -n 1 --skip 1)"
+  git checkout $commit
+
+  run_with_git_config
+
+  assert_success
+  assert_output "($commit ✓)"
+}
