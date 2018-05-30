@@ -1,12 +1,9 @@
 extern crate git2;
 
-use std::collections::BTreeSet;
-
 use self::git2::Repository;
 use self::git2::Status;
 use self::git2::ErrorCode;
 use self::git2::BranchType;
-use self::git2::Oid;
 
 use types::Integration;
 use types::Placeholder;
@@ -104,24 +101,43 @@ impl Integration for Git {
                         let branch = self.repo.find_branch(&branch_name[11..], BranchType::Local).unwrap();
                         let remote_branch = branch.upstream().unwrap();
 
-                        let left_id = branch.get().target().unwrap();
-                        let right_id = remote_branch.get().target().unwrap();
+                        let head_id = branch.get().target().unwrap();
+                        let upstream_id = remote_branch.get().target().unwrap();
 
-                        let merge_base_id = self.repo.merge_base(left_id, right_id).unwrap();
+                        if head_id == upstream_id {
+                            return "".to_owned();
+                        }
 
-                        let mut revwalk_left = self.repo.revwalk().unwrap();
-                        revwalk_left.push(left_id).unwrap();
-                        revwalk_left.push(merge_base_id).unwrap();
+                        let merge_base_id = self.repo.merge_base(head_id, upstream_id).unwrap();
 
-                        let mut revwalk_right = self.repo.revwalk().unwrap();
-                        revwalk_right.push(right_id).unwrap();
-                        revwalk_right.push(merge_base_id).unwrap();
+                        let ahead;
+                        let behind;
 
-                        let local_commits = revwalk_left.map(|r| r.unwrap()).collect::<BTreeSet<Oid>>();
-                        let remote_commits = revwalk_right.map(|r| r.unwrap()).collect::<BTreeSet<Oid>>();
+                        if merge_base_id == head_id {
+                            ahead = 0;
 
-                        let ahead = local_commits.difference(&remote_commits).count();
-                        let behind = remote_commits.difference(&local_commits).count();
+                            let mut revwalk = self.repo.revwalk().unwrap();
+                            revwalk.push(upstream_id).unwrap();
+                            revwalk.hide(merge_base_id).unwrap();
+                            behind = revwalk.count();
+                        } else if merge_base_id == upstream_id {
+                            behind = 0;
+
+                            let mut revwalk = self.repo.revwalk().unwrap();
+                            revwalk.push(head_id).unwrap();
+                            revwalk.hide(merge_base_id).unwrap();
+                            ahead = revwalk.count();
+                        } else {
+                            let mut revwalk = self.repo.revwalk().unwrap();
+                            revwalk.push(upstream_id).unwrap();
+                            revwalk.hide(merge_base_id).unwrap();
+                            behind = revwalk.count();
+
+                            let mut revwalk = self.repo.revwalk().unwrap();
+                            revwalk.push(head_id).unwrap();
+                            revwalk.hide(merge_base_id).unwrap();
+                            ahead = revwalk.count();
+                        }
 
                         let mut result = String::new();
 
