@@ -35,16 +35,16 @@ named!(section<&str, Expr>, map!(delimited!(char!('{'), exprs, char!('}')), |c| 
 
 named!(tagged_exprs<&str, (&str, Vec<Expr>)>, separated_pair!(nom::alpha, char!(':'), exprs));
 
-named!(integration<&str, Expr>, map!(delimited!(char!('{'), tagged_exprs, char!('}')), make_integration));
+named!(integration<&str, Expr>, map!(delimited!(tag!("#{"), tagged_exprs, char!('}')), make_integration));
 
 named!(exprs<&str, Vec<Expr>>,
     many0!(
         alt_complete!(
             color       |
-            literal     |
+            section     |
             placeholder |
             integration |
-            section
+            literal
         )
     )
 );
@@ -107,12 +107,12 @@ mod tests {
 
     #[test]
     fn test_integration() {
-        assert_eq!(integration("{git:[%hi%]}").unwrap(), ("", Expr::Integration(Integration { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) })));
+        assert_eq!(integration("#{git:[%hi%]}").unwrap(), ("", Expr::Integration(Integration { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) })));
     }
 
     #[test]
     fn test_prompt() {
-        assert_eq!(prompt("${11}{rbenv:${green}%version%}${22}[]{git:[%hi%{+-%status%}]}").unwrap(), ("", Prompt { exprs: vec![
+        assert_eq!(prompt("${11}#{rbenv:${green}%version%}${22}[]#{git:[%hi%{+-%status%}]}").unwrap(), ("", Prompt { exprs: vec![
             Expr::Color(Color::Ansi(11)),
             Expr::Integration(Integration {
                 name: "rbenv",

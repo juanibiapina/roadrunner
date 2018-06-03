@@ -5,7 +5,7 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='[${red}%username%${reset}@${magenta}%hostname%${reset}:{rbenv:${green}[Ruby %version%] }${blue}%cwd%${reset}{git: ({${magenta}%head%{reset}}{ ${reset}{↓%behind%}{↑%ahead%}}{ {${green}●%index%${reset}}{${red}+%wt%${reset}}{${reset}…%untracked%}{${green}✓%clean%${reset}})})}{reset}]
+$ export ROADRUNNER_PROMPT='[${red}%username%${reset}@${magenta}%hostname%${reset}:#{rbenv:${green}[Ruby %version%] }${blue}%cwd%${reset}#{git: ({${magenta}%head%{reset}}{ ${reset}{↓%behind%}{↑%ahead%}}{ {${green}●%index%${reset}}{${red}+%wt%${reset}}{${reset}…%untracked%}{${green}✓%clean%${reset}})})}{reset}]
 :) '
 $ roadrunner
 ```
@@ -63,15 +63,15 @@ or nested section inside the section renders. Example:
 If the placeholder `%name` doesn't render anything, the whole section is
 ignored. Sections can be nested.
 
-### Integrations - `{tag:...}`
+### Integrations - `#{tag:...}`
 
-Integrations are delimited by `{` and `}`. Inside an integration, a tag is used
+Integrations are delimited by `#{` and `}`. Inside an integration, a tag is used
 to identify the type of integration, which will determine if this integration
 will be rendered at all. After the tag followed by a `:`, any expression is
 allowed. Extra placeholders are defined for each integration.  Example:
 
 ```
-$ export ROADRUNNER_PROMPT="{git:(%head%)}"
+$ export ROADRUNNER_PROMPT="#{git:(%head%)}"
 ```
 
 This outputs the current git HEAD in parenthesis if inside a git repository.
