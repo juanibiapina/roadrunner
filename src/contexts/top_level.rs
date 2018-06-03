@@ -1,4 +1,5 @@
 use types::Context;
+use types::EvalResult;
 use utils;
 
 pub struct TopLevelContext;
@@ -10,12 +11,12 @@ impl TopLevelContext {
 }
 
 impl Context for TopLevelContext {
-    fn eval(&self, name: &str) -> String {
+    fn eval(&self, name: &str) -> EvalResult {
         match name {
-            "cwd" => utils::cwd(),
-            "hostname" => utils::hostname(),
-            "username" => utils::username(),
-            _ => "".to_owned(),
+            "cwd" => EvalResult::Some(utils::cwd()),
+            "hostname" => EvalResult::Some(utils::hostname()),
+            "username" => EvalResult::Some(utils::username()),
+            _ => EvalResult::None,
         }
     }
 }

@@ -2,9 +2,6 @@
 pub struct Literal(pub char);
 
 #[derive(PartialEq, Debug)]
-pub struct Placeholder<'a>(pub &'a str);
-
-#[derive(PartialEq, Debug)]
 pub enum ColorName {
     Reset,
     Black,
@@ -24,17 +21,24 @@ pub enum Color {
 }
 
 #[derive(PartialEq, Debug)]
+pub struct Placeholder<'a>(pub &'a str);
+
+#[derive(PartialEq, Debug)]
+pub struct Section<'a>(pub Vec<Expr<'a>>);
+
+#[derive(PartialEq, Debug)]
+pub struct Integration<'a> {
+    pub name: &'a str,
+    pub exprs: Vec<Expr<'a>>,
+}
+
+#[derive(PartialEq, Debug)]
 pub enum Expr<'a> {
     Color(Color),
     Literal(Literal),
     Placeholder(Placeholder<'a>),
     Section(Section<'a>),
-}
-
-#[derive(PartialEq, Debug)]
-pub struct Section<'a> {
-    pub name: &'a str,
-    pub exprs: Vec<Expr<'a>>,
+    Integration(Integration<'a>),
 }
 
 #[derive(PartialEq, Debug)]
@@ -43,7 +47,7 @@ pub struct Prompt<'a> {
 }
 
 pub trait Context {
-    fn eval(&self, expr: &str) -> String;
+    fn eval(&self, expr: &str) -> EvalResult;
 }
 
 pub fn color_name(n: &str) -> ColorName {
@@ -60,3 +64,27 @@ pub fn color_name(n: &str) -> ColorName {
         _ => panic!("unsupported color"),
     }
 }
+
+pub enum EvalResult {
+    None,
+    Some(String),
+    Vec(Vec<EvalResult>),
+}
+
+impl EvalResult {
+    pub fn simplify(self) -> Option<String> {
+        match self {
+            EvalResult::None => None,
+            EvalResult::Some(value) => Some(value),
+            EvalResult::Vec(values) => Some(values.into_iter().filter_map(|v| v.simplify()).collect::<Vec<String>>().join("")),
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        match self {
+            EvalResult::None => true,
+            _ => false,
+        }
+    }
+}
+

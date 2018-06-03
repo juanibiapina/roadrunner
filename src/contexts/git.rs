@@ -1,10 +1,10 @@
 use nom;
 use nom::types::CompleteStr;
 
-use std::fmt::Write;
 use std::process::Command;
 
 use types::Context;
+use types::EvalResult;
 
 pub struct GitContext {
     head: String,
@@ -112,53 +112,54 @@ impl GitContext {
 }
 
 impl Context for GitContext {
-    fn eval(&self, name: &str) -> String {
+    fn eval(&self, name: &str) -> EvalResult {
         match name {
             "head" => {
-                self.head.to_string()
+                EvalResult::Some(self.head.to_string())
             },
-            "commits" => {
-                let mut result = String::new();
-
-                if self.behind > 0 {
-                    write!(result, "↓{}", self.behind).unwrap();
-                }
-
+            "ahead" => {
                 if self.ahead > 0 {
-                    write!(result, "↑{}", self.ahead).unwrap();
+                    EvalResult::Some(self.ahead.to_string())
+                } else {
+                    EvalResult::None
                 }
-
-                result
+            },
+            "behind" => {
+                if self.behind > 0 {
+                    EvalResult::Some(self.behind.to_string())
+                } else {
+                    EvalResult::None
+                }
             },
             "index" => {
                 if self.index > 0 {
-                    format!("●{}", self.index)
+                    EvalResult::Some(format!("{}", self.index))
                 } else {
-                    "".to_owned()
+                    EvalResult::None
                 }
             },
             "wt" => {
                 if self.wt > 0 {
-                    format!("+{}", self.wt)
+                    EvalResult::Some(format!("{}", self.wt))
                 } else {
-                    "".to_owned()
+                    EvalResult::None
                 }
             },
             "untracked" => {
                 if self.untracked > 0 {
-                    "…".to_owned()
+                    EvalResult::Some("".to_owned())
                 } else {
-                    "".to_owned()
+                    EvalResult::None
                 }
             },
             "clean" => {
                 if self.index == 0 && self.wt == 0 && self.untracked == 0 {
-                    "✓".to_owned()
+                    EvalResult::Some("".to_owned())
                 } else {
-                    "".to_owned()
+                    EvalResult::None
                 }
             },
-            _ => panic!("unsupported integration placeholder"),
+            _ => EvalResult::None,
         }
     }
 }

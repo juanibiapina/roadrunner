@@ -3,7 +3,7 @@
 load test_helper
 
 run_with_git_config() {
-  ROADRUNNER_PROMPT="{git:(%head% %commits% %index%%wt%%untracked%%clean%)}" run $ROADRUNNER_BIN
+  ROADRUNNER_PROMPT="{git:(%head%{ {↓%behind%}{↑%ahead%}}{ {●%index%}{+%wt%}{…%untracked%}{✓%clean%})}}" run $ROADRUNNER_BIN
 }
 
 @test "git: when not in a git repo" {
@@ -68,7 +68,7 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "(master  ✓)"
+  assert_output "(master ✓)"
 }
 
 @test "git: when in a git repo without any branches" {
@@ -79,7 +79,7 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "(master  ✓)"
+  assert_output "(master ✓)"
 }
 
 @test "git: when in a git repo with a detached head" {
@@ -91,5 +91,5 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "((detached)  ✓)"
+  assert_output "((detached) ✓)"
 }

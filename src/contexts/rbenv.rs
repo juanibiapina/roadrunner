@@ -4,6 +4,7 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use types::Context;
+use types::EvalResult;
 
 pub struct RbenvContext {
     version_file: PathBuf,
@@ -29,16 +30,16 @@ impl RbenvContext {
 }
 
 impl Context for RbenvContext {
-    fn eval(&self, name: &str) -> String {
+    fn eval(&self, name: &str) -> EvalResult {
         match name {
             "version" => {
                 let mut file = File::open(&self.version_file).unwrap();
 
                 let mut contents = String::new();
                 file.read_to_string(&mut contents).unwrap();
-                contents.trim().to_string()
+                EvalResult::Some(contents.trim().to_string())
             },
-            _ => panic!("unsupported integration placeholder"),
+            _ => EvalResult::None,
         }
     }
 }
