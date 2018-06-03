@@ -3,15 +3,14 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-use types::Integration;
-use types::Placeholder;
+use types::Context;
 
-pub struct Rbenv {
+pub struct RbenvContext {
     version_file: PathBuf,
 }
 
-impl Rbenv {
-    pub fn new() -> Option<Rbenv> {
+impl RbenvContext {
+    pub fn new() -> Option<RbenvContext> {
         let path = env::current_dir().unwrap();
 
         for path in path.ancestors() {
@@ -19,7 +18,7 @@ impl Rbenv {
             version_file.push(".ruby-version");
 
             if version_file.exists() {
-                return Some(Rbenv {
+                return Some(RbenvContext {
                     version_file: version_file,
                 });
             }
@@ -29,9 +28,9 @@ impl Rbenv {
     }
 }
 
-impl Integration for Rbenv {
-    fn eval(&self, placeholder: &Placeholder) -> String {
-        match placeholder.0 {
+impl Context for RbenvContext {
+    fn eval(&self, name: &str) -> String {
+        match name {
             "version" => {
                 let mut file = File::open(&self.version_file).unwrap();
 

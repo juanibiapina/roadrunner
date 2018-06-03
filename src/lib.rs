@@ -7,7 +7,7 @@ mod types;
 mod parser;
 mod eval;
 mod utils;
-mod integrations;
+mod contexts;
 
 pub fn process(value: &str) -> String {
     let parsed = parser::parse(value);

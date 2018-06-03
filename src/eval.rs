@@ -2,26 +2,36 @@ extern crate termion;
 
 use self::termion::color;
 
-use integrations;
+use contexts::top_level::TopLevelContext;
+use contexts::git::GitContext;
+use contexts::rbenv::RbenvContext;
 use types::*;
-use utils;
 
 pub fn eval(prompt: &Prompt) -> String {
-    prompt.exprs.iter().map(eval_top_level_expr).collect::<Vec<String>>().join("")
+    let context = Box::new(TopLevelContext::new()) as Box<Context>;
+
+    prompt.exprs.iter().map(|expr| eval_in_context(&context, expr)).collect::<Vec<String>>().join("")
 }
 
-fn eval_top_level_expr(expr: &TopLevelExpr) -> String {
+fn eval_in_context(context: &Box<Context>, expr: &Expr) -> String {
     match expr {
-        TopLevelExpr::Expr(expr) => {
-            match expr {
-                Expr::Color(color) => eval_color(color),
-                Expr::Literal(literal) => literal.0.to_string(),
-                Expr::Placeholder(placeholder) => eval_top_level_placeholder(placeholder.0),
-            }
+        Expr::Color(color) => eval_color(color),
+        Expr::Literal(literal) => literal.0.to_string(),
+        Expr::Placeholder(placeholder) => context.eval(placeholder.0),
+        Expr::Section(section) => {
+            let context: Option<Box<Context>> = match section.name {
+                "git" => GitContext::new().map(|i| Box::new(i) as Box<Context>),
+                "rbenv" => RbenvContext::new().map(|i| Box::new(i) as Box<Context>),
+                _ => panic!("unsupported section"),
+            };
+
+            let context = match context {
+                Some(context) => context,
+                None => return "".to_owned(),
+            };
+
+            section.exprs.iter().map(|expr| eval_in_context(&context, expr)).collect::<Vec<String>>().join("")
         },
-        TopLevelExpr::Section(value) => {
-            eval_section(value)
-        }
     }
 }
 
@@ -40,40 +50,6 @@ fn eval_color(color: &Color) -> String {
                 ColorName::Cyan => format!("{}", color::Fg(color::Cyan)),
                 ColorName::White => format!("{}", color::Fg(color::White)),
             }
-        },
-    }
-}
-
-fn eval_section(section: &Section) -> String {
-    let integration: Option<Box<Integration>> = match section.name {
-        "git" => integrations::git::Git::new().map(|i| Box::new(i) as Box<Integration>),
-        "rbenv" => integrations::rbenv::Rbenv::new().map(|i| Box::new(i) as Box<Integration>),
-        _ => panic!("unsupported section"),
-    };
-
-    let integration = match integration {
-        Some(integration) => integration,
-        None => return "".to_owned(),
-    };
-
-    section.exprs.iter().map(|expr| eval_in_integration(expr, &integration)).collect::<Vec<String>>().join("")
-}
-
-fn eval_top_level_placeholder(name: &str) -> String {
-    match name {
-        "hostname" => utils::hostname(),
-        "username" => utils::username(),
-        "cwd" => utils::cwd(),
-        _ => panic!("unsupported placeholder"),
-    }
-}
-
-fn eval_in_integration(expr: &Expr, integration: &Box<Integration>) -> String {
-    match expr {
-        Expr::Color(color) => eval_color(color),
-        Expr::Literal(literal) => literal.0.to_string(),
-        Expr::Placeholder(placeholder) => {
-            integration.eval(placeholder)
         },
     }
 }

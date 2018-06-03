@@ -28,6 +28,7 @@ pub enum Expr<'a> {
     Color(Color),
     Literal(Literal),
     Placeholder(Placeholder<'a>),
+    Section(Section<'a>),
 }
 
 #[derive(PartialEq, Debug)]
@@ -37,18 +38,12 @@ pub struct Section<'a> {
 }
 
 #[derive(PartialEq, Debug)]
-pub enum TopLevelExpr<'a> {
-    Expr(Expr<'a>),
-    Section(Section<'a>),
-}
-
-#[derive(PartialEq, Debug)]
 pub struct Prompt<'a> {
-    pub exprs: Vec<TopLevelExpr<'a>>,
+    pub exprs: Vec<Expr<'a>>,
 }
 
-pub trait Integration {
-    fn eval(&self, expr: &Placeholder) -> String;
+pub trait Context {
+    fn eval(&self, expr: &str) -> String;
 }
 
 pub fn color_name(n: &str) -> ColorName {

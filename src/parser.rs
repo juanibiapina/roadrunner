@@ -1,11 +1,11 @@
 use nom;
 use types::*;
 
-fn make_section<'a>((name, exprs): (&'a str, Vec<Expr<'a>>)) -> Section<'a> {
-    Section {
+fn make_section<'a>((name, exprs): (&'a str, Vec<Expr<'a>>)) -> Expr<'a> {
+    Expr::Section(Section {
         name: name,
         exprs: exprs,
-    }
+    })
 }
 
 pub fn parse(value: &str) -> Prompt {
@@ -35,16 +35,16 @@ named!(spec<&str, Vec<Expr> >, many0!(alt_complete!(color | literal | placeholde
 
 named!(tagged_spec<&str, (&str, Vec<Expr>)>, separated_pair!(nom::alpha, char!(':'), spec));
 
-named!(section<&str, Section>, map!(delimited!(char!('{'), tagged_spec, char!('}')), make_section));
+named!(section<&str, Expr>, map!(delimited!(char!('{'), tagged_spec, char!('}')), make_section));
 
 named!(prompt<&str, Prompt>,
     map!(
         many0!(
             alt_complete!(
-                color       => { |color|       TopLevelExpr::Expr(color)       } |
-                literal     => { |literal|     TopLevelExpr::Expr(literal)     } |
-                placeholder => { |placeholder| TopLevelExpr::Expr(placeholder) } |
-                section     => { |section|     TopLevelExpr::Section(section)  }
+                color       |
+                literal     |
+                placeholder |
+                section
             )
         ),
         |exprs| Prompt { exprs: exprs }
@@ -93,24 +93,24 @@ mod tests {
 
     #[test]
     fn test_section() {
-        assert_eq!(section("{git:[%hi%]}").unwrap(), ("", Section { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) }));
+        assert_eq!(section("{git:[%hi%]}").unwrap(), ("", Expr::Section(Section { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) })));
     }
 
     #[test]
     fn test_prompt() {
         assert_eq!(prompt("{11}{rbenv:{green}%version%}{22}[]{git:[%hi%]}").unwrap(), ("", Prompt { exprs: vec![
-            TopLevelExpr::Expr(Expr::Color(Color::Ansi(11))),
-            TopLevelExpr::Section(Section {
+            Expr::Color(Color::Ansi(11)),
+            Expr::Section(Section {
                 name: "rbenv",
                 exprs: vec![
                     Expr::Color(Color::Name(ColorName::Green)),
                     Expr::Placeholder(Placeholder("version"))
                 ]
             }),
-            TopLevelExpr::Expr(Expr::Color(Color::Ansi(22))),
-            TopLevelExpr::Expr(Expr::Literal(Literal('['))),
-            TopLevelExpr::Expr(Expr::Literal(Literal(']'))),
-            TopLevelExpr::Section(Section {
+            Expr::Color(Color::Ansi(22)),
+            Expr::Literal(Literal('[')),
+            Expr::Literal(Literal(']')),
+            Expr::Section(Section {
                 name: "git",
                 exprs: vec![
                     Expr::Literal(Literal('[')),

@@ -4,10 +4,9 @@ use nom::types::CompleteStr;
 use std::fmt::Write;
 use std::process::Command;
 
-use types::Integration;
-use types::Placeholder;
+use types::Context;
 
-pub struct Git {
+pub struct GitContext {
     head: String,
     ahead: u8,
     behind: u8,
@@ -36,8 +35,8 @@ named!(header_ab<CompleteStr, (u8, u8)>,
     )
 );
 
-impl Git {
-    pub fn new() -> Option<Git> {
+impl GitContext {
+    pub fn new() -> Option<GitContext> {
         let output = Command::new("git")
             .arg("status")
             .arg("--porcelain=2")
@@ -101,7 +100,7 @@ impl Git {
             }
         }
 
-        Some(Git{
+        Some(GitContext{
             head: head.to_owned(),
             ahead: ahead,
             behind: behind,
@@ -112,9 +111,9 @@ impl Git {
     }
 }
 
-impl Integration for Git {
-    fn eval(&self, placeholder: &Placeholder) -> String {
-        match placeholder.0 {
+impl Context for GitContext {
+    fn eval(&self, name: &str) -> String {
+        match name {
             "head" => {
                 self.head.to_string()
             },
