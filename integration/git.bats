@@ -23,6 +23,9 @@ run_with_git_config() {
   touch EXTRA
   git add EXTRA
   git commit -m EXTRA
+  touch EXTRA2
+  git add EXTRA2
+  git commit -m EXTRA2
 
   cd_local "repo"
   echo line > EXTRA
@@ -32,27 +35,27 @@ run_with_git_config() {
 
   run_with_git_config
   assert_success
-  assert_output "(master ↓1↑1 ✓)"
+  assert_output "(master ↓2↑1 ✓)"
 
   echo "line" >> README
   run_with_git_config
   assert_success
-  assert_output "(master ↓1↑1 +1)"
+  assert_output "(master ↓2↑1 +1)"
 
   echo "other" >> FILE
   run_with_git_config
   assert_success
-  assert_output "(master ↓1↑1 +2)"
+  assert_output "(master ↓2↑1 +2)"
 
   git add README
   run_with_git_config
   assert_success
-  assert_output "(master ↓1↑1 ●1+1)"
+  assert_output "(master ↓2↑1 ●1+1)"
 
   touch ANOTHER
   run_with_git_config
   assert_success
-  assert_output "(master ↓1↑1 ●1+1…)"
+  assert_output "(master ↓2↑1 ●1+1…)"
 }
 
 @test "git: when in a subdirectory of a git repo" {
@@ -76,18 +79,17 @@ run_with_git_config() {
   run_with_git_config
 
   assert_success
-  assert_output "(UNBORN  ✓)"
+  assert_output "(master  ✓)"
 }
 
 @test "git: when in a git repo with a detached head" {
   create_git_origin "repo"
   clone_origin "repo"
   cd_local "repo"
-  commit="$(git log --pretty=format:'%h' -n 1 --skip 1)"
-  git checkout $commit
+  git checkout HEAD~1
 
   run_with_git_config
 
   assert_success
-  assert_output "($commit  ✓)"
+  assert_output "((detached)  ✓)"
 }

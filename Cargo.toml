@@ -6,7 +6,6 @@ authors = ["Juan Ibiapina <juanibiapina@gmail.com>"]
 [dependencies]
 hostname = "*"
 users = "*"
-git2 = "*"
 termion = "*"
 
 [dependencies.nom]

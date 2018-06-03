@@ -1,67 +1,113 @@
-extern crate git2;
+use nom;
+use nom::types::CompleteStr;
 
-use self::git2::Repository;
-use self::git2::Status;
-use self::git2::ErrorCode;
-use self::git2::BranchType;
+use std::fmt::Write;
+use std::process::Command;
 
 use types::Integration;
 use types::Placeholder;
 
 pub struct Git {
-    repo: Repository,
+    head: String,
+    ahead: u8,
+    behind: u8,
     index: u8,
     wt: u8,
     untracked: u8,
 }
 
+fn as_str(result: CompleteStr) -> &str {
+    result.0
+}
+
+named!(header_head<CompleteStr, &str>, map!(delimited!(tag!("# branch.head "), is_not!("\n"), eof!()), as_str));
+named!(header_ab<CompleteStr, (u8, u8)>,
+    delimited!(
+        tag!("# branch.ab "),
+        map!(
+            separated_pair!(
+                preceded!(char!('+'), nom::digit),
+                char!(' '),
+                preceded!(char!('-'), nom::digit)
+            ),
+            |(ahead, behind)| (ahead.0.parse().unwrap(), behind.0.parse().unwrap())
+        ),
+        eof!()
+    )
+);
+
 impl Git {
     pub fn new() -> Option<Git> {
-        Repository::discover(".").ok().map(|repo| {
-            let mut index = 0;
-            let mut wt = 0;
-            let mut untracked = 0;
+        let output = Command::new("git")
+            .arg("status")
+            .arg("--porcelain=2")
+            .arg("--branch")
+            .output()
+            .expect("failed to execute git process");
 
-            {
-                let statuses = repo.statuses(None).unwrap();
+        if !output.status.success() {
+            return None;
+        }
 
-                let mut status_changed = Status::empty();
-                status_changed.insert(Status::WT_MODIFIED);
-                status_changed.insert(Status::WT_DELETED);
-                status_changed.insert(Status::WT_TYPECHANGE);
-                status_changed.insert(Status::WT_RENAMED);
+        let stdout = String::from_utf8_lossy(&output.stdout);
 
-                let mut status_staged = Status::empty();
-                status_staged.insert(Status::INDEX_NEW);
-                status_staged.insert(Status::INDEX_MODIFIED);
-                status_staged.insert(Status::INDEX_DELETED);
-                status_staged.insert(Status::INDEX_TYPECHANGE);
-                status_staged.insert(Status::INDEX_RENAMED);
+        let lines = stdout.split("\n");
 
-                let mut status_untracked = Status::empty();
-                status_untracked.insert(Status::WT_NEW);
+        let mut head = "";
+        let mut ahead = 0;
+        let mut behind = 0;
+        let mut index = 0;
+        let mut wt = 0;
+        let mut untracked = 0;
 
-                for entry in statuses.iter() {
-                    if entry.status().intersects(status_changed) {
-                        wt += 1;
-                    }
-
-                    if entry.status().intersects(status_staged) {
-                        index += 1;
-                    }
-
-                    if entry.status().intersects(status_untracked) {
-                        untracked += 1;
-                    }
+        for line in lines {
+            if line.starts_with("#") {
+                if let Ok((CompleteStr(""), value))  =  header_head(CompleteStr(line)) {
+                    head = value;
+                    continue;
                 }
+
+                if let Ok((CompleteStr(""), (v1, v2)))  =  header_ab(CompleteStr(line)) {
+                    ahead = v1;
+                    behind = v2;
+                    continue;
+                }
+
+                continue;
             }
 
-            Git {
-                repo: repo,
-                index: index,
-                wt: wt,
-                untracked: untracked,
+            if line.starts_with("1") || line.starts_with("2") {
+                let line = &line[2..4];
+
+                let mut chars = line.chars();
+                let first = chars.next().unwrap();
+                let second = chars.next().unwrap();
+
+                if first != '.' {
+                    index += 1;
+                }
+
+                if second != '.' {
+                    wt += 1;
+                }
+
+                continue;
             }
+
+            if line.starts_with("?") {
+                untracked += 1;
+
+                continue;
+            }
+        }
+
+        Some(Git{
+            head: head.to_owned(),
+            ahead: ahead,
+            behind: behind,
+            index: index,
+            wt: wt,
+            untracked: untracked,
         })
     }
 }
@@ -70,90 +116,20 @@ impl Integration for Git {
     fn eval(&self, placeholder: &Placeholder) -> String {
         match placeholder.0 {
             "head" => {
-                if self.repo.head_detached().unwrap() {
-                    match self.repo.head() {
-                        Ok(head) => {
-                            let commit = self.repo.find_commit(head.target().unwrap()).unwrap();
-                            commit.as_object().short_id().unwrap().as_str().unwrap().to_owned()
-                        },
-                        Err(_) => panic!("invalid git head"),
-                    }
-                } else {
-                    match self.repo.head() {
-                        Ok(head) => head.shorthand().unwrap().to_owned(),
-                        Err(ref e) if e.code() == ErrorCode::UnbornBranch => "UNBORN".to_owned(),
-                        Err(_) => panic!("invalid git head"),
-                    }
-                }
+                self.head.to_string()
             },
             "commits" => {
-                if self.repo.head_detached().unwrap() {
-                    return "".to_owned();
+                let mut result = String::new();
+
+                if self.behind > 0 {
+                    write!(result, "↓{}", self.behind).unwrap();
                 }
 
-                match self.repo.head() {
-                    Ok(head) => {
-                        if ! head.is_branch() {
-                            return "".to_owned();
-                        }
-
-                        let branch_name = head.name().unwrap();
-                        let branch = self.repo.find_branch(&branch_name[11..], BranchType::Local).unwrap();
-                        let remote_branch = branch.upstream().unwrap();
-
-                        let head_id = branch.get().target().unwrap();
-                        let upstream_id = remote_branch.get().target().unwrap();
-
-                        if head_id == upstream_id {
-                            return "".to_owned();
-                        }
-
-                        let merge_base_id = self.repo.merge_base(head_id, upstream_id).unwrap();
-
-                        let ahead;
-                        let behind;
-
-                        if merge_base_id == head_id {
-                            ahead = 0;
-
-                            let mut revwalk = self.repo.revwalk().unwrap();
-                            revwalk.push(upstream_id).unwrap();
-                            revwalk.hide(merge_base_id).unwrap();
-                            behind = revwalk.count();
-                        } else if merge_base_id == upstream_id {
-                            behind = 0;
-
-                            let mut revwalk = self.repo.revwalk().unwrap();
-                            revwalk.push(head_id).unwrap();
-                            revwalk.hide(merge_base_id).unwrap();
-                            ahead = revwalk.count();
-                        } else {
-                            let mut revwalk = self.repo.revwalk().unwrap();
-                            revwalk.push(upstream_id).unwrap();
-                            revwalk.hide(merge_base_id).unwrap();
-                            behind = revwalk.count();
-
-                            let mut revwalk = self.repo.revwalk().unwrap();
-                            revwalk.push(head_id).unwrap();
-                            revwalk.hide(merge_base_id).unwrap();
-                            ahead = revwalk.count();
-                        }
-
-                        let mut result = String::new();
-
-                        if behind > 0 {
-                            result.push_str(&format!("↓{}", behind));
-                        }
-
-                        if ahead > 0 {
-                            result.push_str(&format!("↑{}", ahead));
-                        }
-
-                        result
-                    },
-                    Err(ref e) if e.code() == ErrorCode::UnbornBranch => "".to_owned(),
-                    Err(_) => panic!("invalid git head"),
+                if self.ahead > 0 {
+                    write!(result, "↑{}", self.ahead).unwrap();
                 }
+
+                result
             },
             "index" => {
                 if self.index > 0 {
@@ -185,5 +161,20 @@ impl Integration for Git {
             },
             _ => panic!("unsupported integration placeholder"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_header_head() {
+        assert_eq!(header_head(CompleteStr("# branch.head master")).unwrap(), (CompleteStr(""), "master"));
+    }
+
+    #[test]
+    fn test_header_ab() {
+        assert_eq!(header_ab(CompleteStr("# branch.ab +32 -2")).unwrap(), (CompleteStr(""), (32, 2)));
     }
 }
