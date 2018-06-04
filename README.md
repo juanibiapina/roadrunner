@@ -17,6 +17,20 @@ Output (with colors stripped):
 :) 
 ```
 
+## Usage
+
+Add the main binary to your path and export a `ROADRUNNER_PROMPT` environment
+variable with your prompt configuration. Refer to the example in the overview
+and the syntax section for more details.
+
+### Zsh
+
+```sh
+setopt prompt_subst # enable prompt substitution
+export ROADRUNNER_PROMPT='...'
+PROMPT='$(roadrunner)'
+```
+
 ## Syntax
 
 Configuration is done using the `ROADRUNNER_PROMPT` environment variable. There
