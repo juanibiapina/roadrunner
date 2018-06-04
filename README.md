@@ -75,7 +75,7 @@ or nested section inside the section renders. Example:
 {Name is %name%}
 ```
 
-If the placeholder `%name` doesn't render anything, the whole section is
+If the placeholder `%name%` doesn't render anything, the whole section is
 ignored. Sections can be nested.
 
 ### Integrations - `#{tag:...}`
