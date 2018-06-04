@@ -80,7 +80,10 @@ Otherwise it prints nothing.
 
 #### git integration
 
-Triggers when current directory or any of its ancestors is a git repository.
+Triggers when current directory or any of its ancestors is a git repository. It
+calls `git` once in order to get status and branch information. Since it checks
+for untracked files, it might be slow in big repositories. All placeholders are
+precalculated when the integration is triggered, regardless of being used.
 Placeholders:
 
 - `%head%`: Current git HEAD (usually current branch name)
