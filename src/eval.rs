@@ -46,19 +46,41 @@ fn eval_in_context(context: &Box<Context>, expr: &Expr) -> EvalResult {
 }
 
 fn eval_color(color: &Color) -> EvalResult {
-    EvalResult::Some(match color {
-        Color::Ansi(v) => format!("{}", color::Fg(color::AnsiValue(*v))),
-        Color::Name(name) => {
-            match name {
-                ColorName::Reset => format!("{}", color::Fg(color::Reset)),
-                ColorName::Black => format!("{}", color::Fg(color::Black)),
-                ColorName::Red => format!("{}", color::Fg(color::Red)),
-                ColorName::Green => format!("{}", color::Fg(color::Green)),
-                ColorName::Yellow => format!("{}", color::Fg(color::Yellow)),
-                ColorName::Blue => format!("{}", color::Fg(color::Blue)),
-                ColorName::Magenta => format!("{}", color::Fg(color::Magenta)),
-                ColorName::Cyan => format!("{}", color::Fg(color::Cyan)),
-                ColorName::White => format!("{}", color::Fg(color::White)),
+    EvalResult::Some(match color.typ {
+        ColorType::Fg => {
+            match color.value {
+                ColorValue::Ansi(v) => format!("{}", color::Fg(color::AnsiValue(v))),
+                ColorValue::Name(ref name) => {
+                    match name {
+                        ColorName::Reset => format!("{}", color::Fg(color::Reset)),
+                        ColorName::Black => format!("{}", color::Fg(color::Black)),
+                        ColorName::Red => format!("{}", color::Fg(color::Red)),
+                        ColorName::Green => format!("{}", color::Fg(color::Green)),
+                        ColorName::Yellow => format!("{}", color::Fg(color::Yellow)),
+                        ColorName::Blue => format!("{}", color::Fg(color::Blue)),
+                        ColorName::Magenta => format!("{}", color::Fg(color::Magenta)),
+                        ColorName::Cyan => format!("{}", color::Fg(color::Cyan)),
+                        ColorName::White => format!("{}", color::Fg(color::White)),
+                    }
+                },
+            }
+        },
+        ColorType::Bg => {
+            match color.value {
+                ColorValue::Ansi(v) => format!("{}", color::Bg(color::AnsiValue(v))),
+                ColorValue::Name(ref name) => {
+                    match name {
+                        ColorName::Reset => format!("{}", color::Bg(color::Reset)),
+                        ColorName::Black => format!("{}", color::Bg(color::Black)),
+                        ColorName::Red => format!("{}", color::Bg(color::Red)),
+                        ColorName::Green => format!("{}", color::Bg(color::Green)),
+                        ColorName::Yellow => format!("{}", color::Bg(color::Yellow)),
+                        ColorName::Blue => format!("{}", color::Bg(color::Blue)),
+                        ColorName::Magenta => format!("{}", color::Bg(color::Magenta)),
+                        ColorName::Cyan => format!("{}", color::Bg(color::Cyan)),
+                        ColorName::White => format!("{}", color::Bg(color::White)),
+                    }
+                },
             }
         },
     })

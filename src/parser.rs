@@ -12,12 +12,23 @@ pub fn parse(value: &str) -> Prompt {
     prompt(value).unwrap().1
 }
 
+named!(color_spec<&str, ColorValue>,
+    alt!(
+        nom::digit => { |c: &str| ColorValue::Ansi(c.parse::<u8>().unwrap()) } |
+        nom::alpha => { |c| ColorValue::Name(color_name(c)) }
+    )
+);
+
+named!(color_type<&str, Color>,
+    alt!(
+        preceded!(tag!("fg:"), color_spec) => {|c| Color {typ: ColorType::Fg, value: c}} |
+        preceded!(tag!("bg:"), color_spec) => {|c| Color {typ: ColorType::Bg, value: c}}
+    )
+);
+
 named!(color<&str, Expr>,
     map!(
-        alt!(
-            delimited!(tag!("${"), nom::digit, char!('}')) => { |c: &str| Color::Ansi(c.parse::<u8>().unwrap()) } |
-            delimited!(tag!("${"), nom::alpha, char!('}')) => { |c| Color::Name(color_name(c)) }
-        ),
+        delimited!(tag!("${"), color_type, char!('}')),
         |c| Expr::Color(c)
     )
 );
@@ -73,12 +84,11 @@ mod tests {
 
     #[test]
     fn test_color() {
-        assert_eq!(color("${red}").unwrap(), ("", Expr::Color(Color::Name(ColorName::Red))));
-        assert_eq!(color("${blue}").unwrap(), ("", Expr::Color(Color::Name(ColorName::Blue))));
-        assert_eq!(color("${reset}").unwrap(), ("", Expr::Color(Color::Name(ColorName::Reset))));
-        assert_eq!(color("${1}").unwrap(), ("", Expr::Color(Color::Ansi(1))));
-        assert_eq!(color("${100}").unwrap(), ("", Expr::Color(Color::Ansi(100))));
-        //assert_eq!(color("${34,23,11}").unwrap(), ("", Expr::Color(ColorRgb(34,23,11))));
+        assert_eq!(color("${fg:red}").unwrap(), ("", Expr::Color(Color{ typ: ColorType::Fg, value: ColorValue::Name(ColorName::Red)})));
+        assert_eq!(color("${bg:blue}").unwrap(), ("", Expr::Color(Color{ typ: ColorType::Bg, value: ColorValue::Name(ColorName::Blue)})));
+        assert_eq!(color("${fg:reset}").unwrap(), ("", Expr::Color(Color{ typ: ColorType::Fg, value: ColorValue::Name(ColorName::Reset)})));
+        assert_eq!(color("${fg:1}").unwrap(), ("", Expr::Color(Color{ typ: ColorType::Fg, value: ColorValue::Ansi(1)})));
+        assert_eq!(color("${bg:100}").unwrap(), ("", Expr::Color(Color{ typ: ColorType::Bg, value: ColorValue::Ansi(100)})));
     }
 
     #[test]
@@ -112,16 +122,16 @@ mod tests {
 
     #[test]
     fn test_prompt() {
-        assert_eq!(prompt("${11}#{rbenv:${green}%version%}${22}[]#{git:[%hi%{+-%status%}]}").unwrap(), ("", Prompt { exprs: vec![
-            Expr::Color(Color::Ansi(11)),
+        assert_eq!(prompt("${fg:11}#{rbenv:${bg:green}%version%}${fg:22}[]#{git:[%hi%{+-%status%}]}").unwrap(), ("", Prompt { exprs: vec![
+            Expr::Color(Color{ typ: ColorType::Fg, value: ColorValue::Ansi(11)}),
             Expr::Integration(Integration {
                 name: "rbenv",
                 exprs: vec![
-                    Expr::Color(Color::Name(ColorName::Green)),
+                    Expr::Color(Color{ typ: ColorType::Bg, value: ColorValue::Name(ColorName::Green)}),
                     Expr::Placeholder(Placeholder("version"))
                 ]
             }),
-            Expr::Color(Color::Ansi(22)),
+            Expr::Color(Color{ typ: ColorType::Fg, value: ColorValue::Ansi(22)}),
             Expr::Literal(Literal('[')),
             Expr::Literal(Literal(']')),
             Expr::Integration(Integration {

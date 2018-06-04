@@ -15,9 +15,21 @@ pub enum ColorName {
 }
 
 #[derive(PartialEq, Debug)]
-pub enum Color {
+pub enum ColorType {
+    Fg,
+    Bg,
+}
+
+#[derive(PartialEq, Debug)]
+pub enum ColorValue {
     Ansi(u8),
     Name(ColorName),
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Color {
+    pub typ: ColorType,
+    pub value: ColorValue,
 }
 
 #[derive(PartialEq, Debug)]

@@ -5,7 +5,7 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='[${red}%username%${reset}@${magenta}%hostname%${reset}:#{rbenv:${green}[Ruby %version%] }${blue}%cwd%${reset}#{git: ({${magenta}%head%{reset}}{ ${reset}{↓%behind%}{↑%ahead%}}{ {${green}●%index%${reset}}{${red}+%wt%${reset}}{${reset}…%untracked%}{${green}✓%clean%${reset}})})}{reset}]
+$ export ROADRUNNER_PROMPT='[${fg:red}%username%${fg:reset}@${fg:magenta}%hostname%${fg:reset}:#{rbenv:${fg:green}[Ruby %version%] }${fg:blue}%cwd%${fg:reset}#{git: ({${fg:magenta}%head%{reset}}{ ${fg:reset}{↓%behind%}{↑%ahead%}}{ {${fg:green}●%index%${fg:reset}}{${fg:red}+%wt%${fg:reset}}{${fg:reset}…%untracked%}{${fg:green}✓%clean%${fg:reset}})})}{reset}]
 :) '
 $ roadrunner
 ```
@@ -30,15 +30,16 @@ Literals as written out exactly as passed. All characters are allowed except:
 - `}`
 - `%`
 
-### Colors - `${name}`
+### Colors - `${fg:value}` or `${bg:value}`
 
-Colors are delimited by `${` and `}`. The content between the brackets can
-be either a terminal color name, `reset`, or a color ANSI code. Examples:
+Colors are delimited by `${` and `}`. The content between the brackets is the
+type `fg` or `bg`, followed by `:` followed by either a terminal color name,
+`reset`, or a color ANSI code. Examples:
 
-- `${red}` - color red
-- `${blue}` - color blue
-- `${reset}` - reset color
-- `${23}` - ANSI color 23
+- `${fg:red}` - foreground color red
+- `${bg:blue}` - background color blue
+- `${fg:reset}` - reset foreground color
+- `${bg:23}` - background ANSI color 23
 
 ### Placeholders - `%name%`
 
