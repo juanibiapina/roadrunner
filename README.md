@@ -5,7 +5,7 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='${fg:reset}[${fg:red}%username%${fg:reset}@${fg:magenta}%hostname%${fg:reset}:#{rbenv:${fg:green}[Ruby %version%] }${fg:blue}%cwd%#{git: ${fg:reset}({${fg:magenta}%head%}{ ${fg:reset}{↓%behind%}{↑%ahead%}}{ {${fg:green}●%index%}{${fg:red}+%wt%}{${fg:reset}…%untracked%}{${fg:green}✓%clean%}}${fg:reset})}${fg:reset}]
+$ export ROADRUNNER_PROMPT='#{fg:%reset%}[#{fg:%red%}%username%#{fg:%reset%}@#{fg:%magenta%}%hostname%#{fg:%reset%}:#{rbenv:#{fg:%green%}[Ruby %version%] }#{fg:%blue%}%cwd%#{git: #{fg:%reset%}({#{fg:%magenta%}%head%}{ #{fg:%reset%}{↓%behind%}{↑%ahead%}}{ {#{fg:%green%}●%index%}{#{fg:%red%}+%wt%}{#{fg:%reset%}…%untracked%}{#{fg:%green%}✓%clean%}}#{fg:%reset%})}#{fg:%reset%}]
 :) '
 $ roadrunner
 ```
@@ -34,7 +34,7 @@ PROMPT='$(roadrunner)'
 ## Syntax
 
 Configuration is done using the `ROADRUNNER_PROMPT` environment variable. There
-are five types of expressions: literals, colors, placeholders, sections and integrations.
+are four types of expressions: literals, placeholders, sections and integrations.
 
 ### Literals
 
@@ -43,17 +43,6 @@ Literals as written out exactly as passed. All characters are allowed except:
 - `{`
 - `}`
 - `%`
-
-### Colors - `${fg:value}` or `${bg:value}`
-
-Colors are delimited by `${` and `}`. The content between the brackets is the
-type `fg` or `bg`, followed by `:` followed by either a terminal color name,
-`reset`, or a color ANSI code. Examples:
-
-- `${fg:red}` - foreground color red
-- `${bg:blue}` - background color blue
-- `${fg:reset}` - reset foreground color
-- `${bg:23}` - background ANSI color 23
 
 ### Placeholders - `%name%`
 
@@ -91,6 +80,16 @@ $ export ROADRUNNER_PROMPT="#{git:(%head%)}"
 
 This outputs the current git HEAD in parenthesis if inside a git repository.
 Otherwise it prints nothing.
+
+#### `fg` and `bg` integrations
+
+These are integrations for rendering foreground and background colors. Inside
+them, placeholders are defined for each of the terminal color names and
+`reset`. Examples:
+
+- `#{fg:%red%}` - foreground color red
+- `#{bg:%blue%}` - background color blue
+- `#{fg:%reset%}` - reset foreground color
 
 #### git integration
 
