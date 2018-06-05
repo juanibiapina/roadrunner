@@ -5,7 +5,7 @@ A very fast and configurable prompt for shells.
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='[${fg:red}%username%${fg:reset}@${fg:magenta}%hostname%${fg:reset}:#{rbenv:${fg:green}[Ruby %version%] }${fg:blue}%cwd%${fg:reset}#{git: ({${fg:magenta}%head%{reset}}{ ${fg:reset}{↓%behind%}{↑%ahead%}}{ {${fg:green}●%index%${fg:reset}}{${fg:red}+%wt%${fg:reset}}{${fg:reset}…%untracked%}{${fg:green}✓%clean%${fg:reset}})})}{reset}]
+$ export ROADRUNNER_PROMPT='${fg:reset}[${fg:red}%username%${fg:reset}@${fg:magenta}%hostname%${fg:reset}:#{rbenv:${fg:green}[Ruby %version%] }${fg:blue}%cwd%#{git: ${fg:reset}({${fg:magenta}%head%}{ ${fg:reset}{↓%behind%}{↑%ahead%}}{ {${fg:green}●%index%}{${fg:red}+%wt%}{${fg:reset}…%untracked%}{${fg:green}✓%clean%}}${fg:reset})}${fg:reset}]
 :) '
 $ roadrunner
 ```
