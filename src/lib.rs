@@ -8,8 +8,4 @@ mod parser;
 mod eval;
 mod utils;
 mod contexts;
-
-pub fn process(value: &str) -> String {
-    let parsed = parser::parse(value);
-    eval::eval(&parsed)
-}
+pub mod engine;

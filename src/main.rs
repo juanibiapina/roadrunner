@@ -8,7 +8,9 @@ fn main() {
         Err(_) => return,
     };
 
-    let result = roadrunner::process(&prompt_string);
+    let engine = roadrunner::engine::Engine::new();
+
+    let result = engine.run(&prompt_string);
 
     println!("{}", result);
 }

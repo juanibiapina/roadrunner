@@ -1,5 +1,6 @@
 extern crate roadrunner;
 
 pub fn run(input: &str) -> String {
-    roadrunner::process(input)
+    let engine = roadrunner::engine::Engine::new();
+    engine.run(input)
 }

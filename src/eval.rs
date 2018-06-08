@@ -1,27 +1,26 @@
 extern crate termion;
 
-use contexts::top_level::TopLevelContext;
+use std::borrow::Borrow;
+
 use contexts::git::GitContext;
 use contexts::fg::FgContext;
 use contexts::bg::BgContext;
 use contexts::rbenv::RbenvContext;
 use types::*;
 
-pub fn eval(prompt: &Prompt) -> String {
-    let context = Box::new(TopLevelContext::new()) as Box<Context>;
-
+pub fn eval<T: Borrow<Context>>(context: T, prompt: &Prompt) -> String {
     prompt.exprs
         .iter()
-        .map(|expr| eval_in_context(&context, expr))
+        .map(|expr| eval_in_context(context.borrow(), expr))
         .filter_map(|result| result.simplify())
         .collect::<Vec<String>>()
         .join("")
 }
 
-fn eval_in_context(context: &Box<Context>, expr: &Expr) -> EvalResult {
+fn eval_in_context<T: Borrow<Context>>(context: T, expr: &Expr) -> EvalResult {
     match expr {
         Expr::Literal(literal) => EvalResult::Some(literal.0.to_string()),
-        Expr::Placeholder(placeholder) => context.eval(placeholder.0),
+        Expr::Placeholder(placeholder) => context.borrow().eval(placeholder.0),
         Expr::Section(section) => eval_section(context, section),
         Expr::Integration(integration) => {
             let context: Option<Box<Context>> = match integration.name {
@@ -39,20 +38,20 @@ fn eval_in_context(context: &Box<Context>, expr: &Expr) -> EvalResult {
 
             EvalResult::Vec(integration.exprs
                 .iter()
-                .map(|expr| eval_in_context(&context, expr))
+                .map(|expr| eval_in_context(context.borrow(), expr))
                 .collect::<Vec<EvalResult>>()
             )
         },
     }
 }
 
-fn eval_section(context: &Box<Context>, section: &Section) -> EvalResult {
+fn eval_section<T: Borrow<Context>>(context: T, section: &Section) -> EvalResult {
     let mut render = false;
 
     let results = section.0.iter().map(|expr| {
         match expr {
             Expr::Placeholder(_) | Expr::Section(_) => {
-                let result = eval_in_context(context, expr);
+                let result = eval_in_context(context.borrow(), expr);
 
                 if !result.is_none() {
                     render = true;
@@ -60,7 +59,7 @@ fn eval_section(context: &Box<Context>, section: &Section) -> EvalResult {
 
                 result
             },
-            _ => eval_in_context(context, expr),
+            _ => eval_in_context(context.borrow(), expr),
         }
     }).collect::<Vec<EvalResult>>();
 
