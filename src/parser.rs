@@ -1,4 +1,6 @@
 use nom;
+use nom::types::CompleteStr;
+
 use types::*;
 
 fn make_integration<'a>((name, exprs): (&'a str, Vec<Expr<'a>>)) -> Expr<'a> {
@@ -9,25 +11,25 @@ fn make_integration<'a>((name, exprs): (&'a str, Vec<Expr<'a>>)) -> Expr<'a> {
 }
 
 pub fn parse(value: &str) -> Prompt {
-    prompt(value).unwrap().1
+    prompt(CompleteStr(value)).unwrap().1
 }
 
-named!(literal<&str, Expr>,
+named!(literal<CompleteStr, Expr>,
         map!(
             none_of!("{}%"),
             |c| Expr::Literal(Literal(c))
         )
 );
 
-named!(placeholder<&str, Expr>, map!(delimited!(char!('%'), nom::alphanumeric, char!('%')), |c| Expr::Placeholder(Placeholder(c))));
+named!(placeholder<CompleteStr, Expr>, map!(delimited!(char!('%'), nom::alphanumeric, char!('%')), |c| Expr::Placeholder(Placeholder(c.0))));
 
-named!(section<&str, Expr>, map!(delimited!(char!('{'), exprs, char!('}')), |c| Expr::Section(Section(c))));
+named!(section<CompleteStr, Expr>, map!(delimited!(char!('{'), exprs, char!('}')), |c| Expr::Section(Section(c))));
 
-named!(tagged_exprs<&str, (&str, Vec<Expr>)>, separated_pair!(nom::alpha, char!(':'), exprs));
+named!(tagged_exprs<CompleteStr, (&str, Vec<Expr>)>, separated_pair!(map!(nom::alpha, |e| e.0), char!(':'), exprs));
 
-named!(integration<&str, Expr>, map!(delimited!(tag!("#{"), tagged_exprs, char!('}')), make_integration));
+named!(integration<CompleteStr, Expr>, map!(delimited!(tag!("#{"), tagged_exprs, char!('}')), make_integration));
 
-named!(exprs<&str, Vec<Expr>>,
+named!(exprs<CompleteStr, Vec<Expr>>,
     many0!(
         alt_complete!(
             section     |
@@ -38,7 +40,7 @@ named!(exprs<&str, Vec<Expr>>,
     )
 );
 
-named!(prompt<&str, Prompt>,
+named!(prompt<CompleteStr, Prompt>,
     map!(
         exprs,
         |exprs| Prompt { exprs: exprs }
@@ -52,23 +54,23 @@ mod tests {
 
     #[test]
     fn test_literal() {
-        assert_eq!(literal("S").unwrap(), ("", Expr::Literal(Literal('S'))));
-        assert_eq!(literal("a").unwrap(), ("", Expr::Literal(Literal('a'))));
-        assert_eq!(literal("[").unwrap(), ("", Expr::Literal(Literal('['))));
-        assert_eq!(literal("]").unwrap(), ("", Expr::Literal(Literal(']'))));
-        assert_eq!(literal(" ").unwrap(), ("", Expr::Literal(Literal(' '))));
-        assert_eq!(literal("\n").unwrap(), ("", Expr::Literal(Literal('\n'))));
+        assert_eq!(literal(CompleteStr("S")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('S'))));
+        assert_eq!(literal(CompleteStr("a")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('a'))));
+        assert_eq!(literal(CompleteStr("[")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('['))));
+        assert_eq!(literal(CompleteStr("]")).unwrap(), (CompleteStr(""), Expr::Literal(Literal(']'))));
+        assert_eq!(literal(CompleteStr(" ")).unwrap(), (CompleteStr(""), Expr::Literal(Literal(' '))));
+        assert_eq!(literal(CompleteStr("\n")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('\n'))));
     }
 
     #[test]
     fn test_placeholder() {
-        assert_eq!(placeholder("%hi%").unwrap(), ("", Expr::Placeholder(Placeholder("hi"))));
-        assert_eq!(placeholder("%1234%").unwrap(), ("", Expr::Placeholder(Placeholder("1234"))));
+        assert_eq!(placeholder(CompleteStr("%hi%")).unwrap(), (CompleteStr(""), Expr::Placeholder(Placeholder("hi"))));
+        assert_eq!(placeholder(CompleteStr("%1234%")).unwrap(), (CompleteStr(""), Expr::Placeholder(Placeholder("1234"))));
     }
 
     #[test]
     fn test_section() {
-        assert_eq!(section("{[%hi%]}").unwrap(), ("", Expr::Section(Section(vec![
+        assert_eq!(section(CompleteStr("{[%hi%]}")).unwrap(), (CompleteStr(""), Expr::Section(Section(vec![
             Expr::Literal(Literal('[')),
             Expr::Placeholder(Placeholder("hi")),
             Expr::Literal(Literal(']')),
@@ -77,22 +79,22 @@ mod tests {
 
     #[test]
     fn test_exprs() {
-        assert_eq!(exprs("[%hi%]").unwrap(), ("", vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']')))));
+        assert_eq!(exprs(CompleteStr("[%hi%]")).unwrap(), (CompleteStr(""), vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']')))));
     }
 
     #[test]
     fn test_tagged_exprs() {
-        assert_eq!(tagged_exprs("git:[%hi%]").unwrap(), ("", ("git", vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))))));
+        assert_eq!(tagged_exprs(CompleteStr("git:[%hi%]")).unwrap(), (CompleteStr(""), ("git", vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))))));
     }
 
     #[test]
     fn test_integration() {
-        assert_eq!(integration("#{git:[%hi%]}").unwrap(), ("", Expr::Integration(Integration { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) })));
+        assert_eq!(integration(CompleteStr("#{git:[%hi%]}")).unwrap(), (CompleteStr(""), Expr::Integration(Integration { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) })));
     }
 
     #[test]
     fn test_prompt() {
-        assert_eq!(prompt("#{fg:%11%}#{rbenv:#{bg:%green%}%version%}#{fg:%22%}[]#{git:[%hi%{+-%status%}]}").unwrap(), ("", Prompt { exprs: vec![
+        assert_eq!(prompt(CompleteStr("#{fg:%11%}#{rbenv:#{bg:%green%}%version%}#{fg:%22%}[]#{git:[%hi%{+-%status%}]}")).unwrap(), (CompleteStr(""), Prompt { exprs: vec![
             Expr::Integration(Integration {
                 name: "fg",
                 exprs: vec![
