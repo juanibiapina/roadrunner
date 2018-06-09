@@ -1,5 +1,5 @@
 #[derive(PartialEq, Debug)]
-pub struct Literal(pub char);
+pub struct Literal(pub String);
 
 #[derive(PartialEq, Debug)]
 pub struct Placeholder<'a>(pub &'a str);

@@ -15,3 +15,8 @@ fn test_literals_symbols() {
 fn test_literals_newline() {
     assert_eq!(run("a\nb "), "a\nb ");
 }
+
+#[test]
+fn test_literals_colors() {
+    assert_eq!(run("\u{1b}[39mcolor"), "\u{1b}[39mcolor");
+}

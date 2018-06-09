@@ -16,8 +16,8 @@ pub fn parse(value: &str) -> Prompt {
 
 named!(literal<CompleteStr, Expr>,
         map!(
-            none_of!("{}%"),
-            |c| Expr::Literal(Literal(c))
+            is_not!("{}%#"),
+            |s| Expr::Literal(Literal(s.0.to_owned()))
         )
 );
 
@@ -54,12 +54,10 @@ mod tests {
 
     #[test]
     fn test_literal() {
-        assert_eq!(literal(CompleteStr("S")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('S'))));
-        assert_eq!(literal(CompleteStr("a")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('a'))));
-        assert_eq!(literal(CompleteStr("[")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('['))));
-        assert_eq!(literal(CompleteStr("]")).unwrap(), (CompleteStr(""), Expr::Literal(Literal(']'))));
-        assert_eq!(literal(CompleteStr(" ")).unwrap(), (CompleteStr(""), Expr::Literal(Literal(' '))));
-        assert_eq!(literal(CompleteStr("\n")).unwrap(), (CompleteStr(""), Expr::Literal(Literal('\n'))));
+        assert_eq!(literal(CompleteStr("String")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("String".to_owned()))));
+        assert_eq!(literal(CompleteStr("[]@  ()=")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("[]@  ()=".to_owned()))));
+        assert_eq!(literal(CompleteStr("a\nb")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("a\nb".to_owned()))));
+        assert_eq!(literal(CompleteStr("\u{1b}[39m")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("\u{1b}[39m".to_owned()))));
     }
 
     #[test]
@@ -71,25 +69,25 @@ mod tests {
     #[test]
     fn test_section() {
         assert_eq!(section(CompleteStr("{[%hi%]}")).unwrap(), (CompleteStr(""), Expr::Section(Section(vec![
-            Expr::Literal(Literal('[')),
+            Expr::Literal(Literal("[".to_owned())),
             Expr::Placeholder(Placeholder("hi")),
-            Expr::Literal(Literal(']')),
+            Expr::Literal(Literal("]".to_owned())),
         ]))));
     }
 
     #[test]
     fn test_exprs() {
-        assert_eq!(exprs(CompleteStr("[%hi%]")).unwrap(), (CompleteStr(""), vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']')))));
+        assert_eq!(exprs(CompleteStr("[%hi%]")).unwrap(), (CompleteStr(""), vec!(Expr::Literal(Literal("[".to_owned())), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]".to_owned())))));
     }
 
     #[test]
     fn test_tagged_exprs() {
-        assert_eq!(tagged_exprs(CompleteStr("git:[%hi%]")).unwrap(), (CompleteStr(""), ("git", vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))))));
+        assert_eq!(tagged_exprs(CompleteStr("git:[%hi%]")).unwrap(), (CompleteStr(""), ("git", vec!(Expr::Literal(Literal("[".to_owned())), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]".to_owned()))))));
     }
 
     #[test]
     fn test_integration() {
-        assert_eq!(integration(CompleteStr("#{git:[%hi%]}")).unwrap(), (CompleteStr(""), Expr::Integration(Integration { name: "git", exprs: vec!(Expr::Literal(Literal('[')), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal(']'))) })));
+        assert_eq!(integration(CompleteStr("#{git:[%hi%]}")).unwrap(), (CompleteStr(""), Expr::Integration(Integration { name: "git", exprs: vec!(Expr::Literal(Literal("[".to_owned())), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]".to_owned()))) })));
     }
 
     #[test]
@@ -119,19 +117,17 @@ mod tests {
                     Expr::Placeholder(Placeholder("22")),
                 ]
             }),
-            Expr::Literal(Literal('[')),
-            Expr::Literal(Literal(']')),
+            Expr::Literal(Literal("[]".to_owned())),
             Expr::Integration(Integration {
                 name: "git",
                 exprs: vec![
-                    Expr::Literal(Literal('[')),
+                    Expr::Literal(Literal("[".to_owned())),
                     Expr::Placeholder(Placeholder("hi")),
                     Expr::Section(Section(vec![
-                        Expr::Literal(Literal('+')),
-                        Expr::Literal(Literal('-')),
+                        Expr::Literal(Literal("+-".to_owned())),
                         Expr::Placeholder(Placeholder("status")),
                     ])),
-                    Expr::Literal(Literal(']'))
+                    Expr::Literal(Literal("]".to_owned()))
                 ]
             })
         ]}));
