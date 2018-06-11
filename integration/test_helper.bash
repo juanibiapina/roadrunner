@@ -4,10 +4,11 @@ load vendor/bats-assert/load
 export ROADRUNNER_TEST_DIR="${BATS_TMPDIR}/roadrunner"
 export ROADRUNNER_ORIGIN_DIR="${ROADRUNNER_TEST_DIR}/origin"
 export ROADRUNNER_LOCAL_DIR="${ROADRUNNER_TEST_DIR}/local"
+export ROADRUNNER_SCRIPT="${ROADRUNNER_TEST_DIR}/script.rhai"
 
 export ROADRUNNER_ROOT="${BATS_TEST_DIRNAME}/.."
 
-export ROADRUNNER_BIN=$ROADRUNNER_ROOT/target/debug/roadrunner
+export ROADRUNNER_BIN="$ROADRUNNER_ROOT/target/debug/roadrunner ${ROADRUNNER_SCRIPT}"
 
 mkdir -p $ROADRUNNER_ORIGIN_DIR
 mkdir -p $ROADRUNNER_LOCAL_DIR

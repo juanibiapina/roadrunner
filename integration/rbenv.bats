@@ -3,7 +3,16 @@
 load test_helper
 
 run_with_rbenv() {
-  ROADRUNNER_PROMPT="#{rbenv:(%version%)}" run $ROADRUNNER_BIN
+  cat > "$ROADRUNNER_SCRIPT" << RHAI
+result = ""
+rbenv = rbenv_init()
+if rbenv:enabled() then
+  result = result .. "Ruby "
+  result = result .. rbenv:version()
+end
+return result
+RHAI
+  run $ROADRUNNER_BIN
 }
 
 @test "rbenv: when not in a rbenv repo" {
@@ -24,7 +33,7 @@ run_with_rbenv() {
   run_with_rbenv
 
   assert_success
-  assert_output "(2.5.1)"
+  assert_output "Ruby 2.5.1"
 }
 
 @test "rbenv: when in a subdirectory of an rbenv repo" {
@@ -37,5 +46,5 @@ run_with_rbenv() {
   run_with_rbenv
 
   assert_success
-  assert_output "(2.5.1)"
+  assert_output "Ruby 2.5.1"
 }

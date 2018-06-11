@@ -1,16 +1,36 @@
 extern crate roadrunner;
+extern crate clap;
 
-use std::env;
+use clap::{Arg, App};
+
+use std::process::exit;
+
+use roadrunner::types::Error;
 
 fn main() {
-    let prompt_string = match env::var("ROADRUNNER_PROMPT") {
-        Ok(val) => val,
-        Err(_) => return,
-    };
+    let matches = App::new("roadrunner")
+        .about("Shell prompt generator")
+        .arg(Arg::with_name("SCRIPT")
+             .help("Selects the script file to run")
+             .required(true)
+             .index(1))
+        .get_matches();
 
-    let engine = roadrunner::engine::Engine::new();
+    let script_filename = matches.value_of("SCRIPT").unwrap();
 
-    let result = engine.run(&prompt_string);
+    let mut engine = roadrunner::engine::Engine::new();
 
-    println!("{}", result);
+    let result = engine.run_file(&script_filename);
+
+    match result {
+        Ok(result) => println!("{}", result),
+        Err(Error::ScriptError(err)) => {
+            println!("{}", err);
+            exit(1);
+        },
+        Err(Error::IoError(err)) => {
+            println!("{}", err);
+            exit(1);
+        },
+    }
 }

@@ -1,19 +1,10 @@
+extern crate rlua;
+
+use self::rlua::{UserData, UserDataMethods};
 use nom;
 use nom::types::CompleteStr;
 
 use std::process::Command;
-
-use types::Context;
-use types::EvalResult;
-
-pub struct GitContext {
-    head: String,
-    ahead: u8,
-    behind: u8,
-    index: u8,
-    wt: u8,
-    untracked: u8,
-}
 
 fn as_str(result: CompleteStr) -> &str {
     result.0
@@ -35,8 +26,32 @@ named!(header_ab<CompleteStr, (u8, u8)>,
     )
 );
 
-impl GitContext {
-    pub fn new() -> Option<GitContext> {
+#[derive(Default, Clone)]
+pub struct Git {
+    enabled: bool,
+    head: String,
+    ahead: i64,
+    behind: i64,
+    index: i64,
+    wt: i64,
+    untracked: i64,
+}
+
+impl UserData for Git {
+    fn add_methods(methods: &mut UserDataMethods<Self>) {
+        methods.add_method("enabled", |_, git, ()| { Ok(git.enabled()) });
+        methods.add_method("head", |_, git, ()| { Ok(git.head()) });
+        methods.add_method("ahead", |_, git, ()| { Ok(git.ahead()) });
+        methods.add_method("behind", |_, git, ()| { Ok(git.behind()) });
+        methods.add_method("index", |_, git, ()| { Ok(git.index()) });
+        methods.add_method("wt", |_, git, ()| { Ok(git.wt()) });
+        methods.add_method("untracked", |_, git, ()| { Ok(git.untracked()) });
+
+    }
+}
+
+impl Git {
+    pub fn new() -> Git {
         let output = Command::new("git")
             .arg("status")
             .arg("--porcelain=2")
@@ -45,7 +60,7 @@ impl GitContext {
             .expect("failed to execute git process");
 
         if !output.status.success() {
-            return None;
+            return Git::default();
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -67,8 +82,8 @@ impl GitContext {
                 }
 
                 if let Ok((CompleteStr(""), (v1, v2)))  =  header_ab(CompleteStr(line)) {
-                    ahead = v1;
-                    behind = v2;
+                    ahead = v1 as i64;
+                    behind = v2 as i64;
                     continue;
                 }
 
@@ -100,68 +115,45 @@ impl GitContext {
             }
         }
 
-        Some(GitContext{
+        Git {
+            enabled: true,
             head: head.to_owned(),
-            ahead: ahead,
-            behind: behind,
-            index: index,
-            wt: wt,
-            untracked: untracked,
-        })
-    }
-}
-
-impl Context for GitContext {
-    fn eval(&self, name: &str) -> EvalResult {
-        match name {
-            "head" => {
-                EvalResult::Some(self.head.to_string())
-            },
-            "ahead" => {
-                if self.ahead > 0 {
-                    EvalResult::Some(self.ahead.to_string())
-                } else {
-                    EvalResult::None
-                }
-            },
-            "behind" => {
-                if self.behind > 0 {
-                    EvalResult::Some(self.behind.to_string())
-                } else {
-                    EvalResult::None
-                }
-            },
-            "index" => {
-                if self.index > 0 {
-                    EvalResult::Some(format!("{}", self.index))
-                } else {
-                    EvalResult::None
-                }
-            },
-            "wt" => {
-                if self.wt > 0 {
-                    EvalResult::Some(format!("{}", self.wt))
-                } else {
-                    EvalResult::None
-                }
-            },
-            "untracked" => {
-                if self.untracked > 0 {
-                    EvalResult::Some("".to_owned())
-                } else {
-                    EvalResult::None
-                }
-            },
-            "clean" => {
-                if self.index == 0 && self.wt == 0 && self.untracked == 0 {
-                    EvalResult::Some("".to_owned())
-                } else {
-                    EvalResult::None
-                }
-            },
-            _ => EvalResult::None,
+            ahead,
+            behind,
+            index,
+            wt,
+            untracked,
         }
     }
+
+    pub fn enabled(&self) -> bool {
+        self.enabled
+    }
+
+    pub fn head(&self) -> String {
+        self.head.clone()
+    }
+
+    pub fn ahead(&self) -> i64 {
+        self.ahead
+    }
+
+    pub fn behind(&self) -> i64 {
+        self.behind
+    }
+
+    pub fn index(&self) -> i64 {
+        self.index
+    }
+
+    pub fn wt(&self) -> i64 {
+        self.wt
+    }
+
+    pub fn untracked(&self) -> i64 {
+        self.untracked
+    }
+
 }
 
 #[cfg(test)]

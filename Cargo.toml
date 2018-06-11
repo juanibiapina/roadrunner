@@ -7,6 +7,8 @@ authors = ["Juan Ibiapina <juanibiapina@gmail.com>"]
 hostname = "*"
 users = "*"
 termion = "*"
+rlua = "*"
+clap = "*"
 
 [dependencies.nom]
 version = "^4.0"
