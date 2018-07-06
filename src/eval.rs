@@ -15,12 +15,19 @@ pub fn eval(prompt: &Prompt) -> String {
 }
 
 fn eval_section(section: &Section) -> EvalResult {
-    EvalResult::Vec(
-        section.parts
-            .iter()
-            .map(|part| eval_part(part))
-            .collect::<Vec<_>>()
-    )
+    match section.name {
+        Some(ref name) => {
+            EvalResult::None
+        },
+        None => {
+            EvalResult::Vec(
+                section.parts
+                    .iter()
+                    .map(|part| eval_part(part))
+                    .collect::<Vec<_>>()
+            )
+        },
+    }
 }
 
 fn eval_part(part: &Part) -> EvalResult {

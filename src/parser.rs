@@ -61,13 +61,21 @@ named!(interpolation<CompleteStr, Part>,
 
 named!(section<CompleteStr, Section>,
     map!(
-        many1!(
-            alt!(
-                interpolation |
-                literal
+        pair!(
+            opt!(
+                map!(
+                    delimited!(char!('?'), nom::alphanumeric, char!(':')),
+                    |s| s.0.to_owned()
+                )
+            ),
+            many1!(
+                alt!(
+                    interpolation |
+                    literal
+                )
             )
         ),
-        |parts| Section { parts: parts }
+        |(name, parts)| Section { name, parts }
     )
 );
 
@@ -98,12 +106,27 @@ mod tests {
     }
 
     #[test]
-    fn test_section() {
-        assert_eq!(section(CompleteStr("part1#{name}part2")).unwrap(), (CompleteStr(""), Section { parts: vec![
-            Part::Literal("part1".to_owned()),
-            Part::Interpolation(Expr::Variable("name".to_owned())),
-            Part::Literal("part2".to_owned()),
-        ] }));
+    fn test_section_without_name() {
+        assert_eq!(section(CompleteStr("part1#{name}part2")).unwrap(), (CompleteStr(""), Section {
+            name: None,
+            parts: vec![
+                Part::Literal("part1".to_owned()),
+                Part::Interpolation(Expr::Variable("name".to_owned())),
+                Part::Literal("part2".to_owned()),
+            ]
+        }));
+    }
+
+    #[test]
+    fn test_section_with_name() {
+        assert_eq!(section(CompleteStr("?name:part1#{name}part2")).unwrap(), (CompleteStr(""), Section {
+            name: Some("name".to_owned()),
+            parts: vec![
+                Part::Literal("part1".to_owned()),
+                Part::Interpolation(Expr::Variable("name".to_owned())),
+                Part::Literal("part2".to_owned()),
+            ]
+        }));
     }
 
     #[test]

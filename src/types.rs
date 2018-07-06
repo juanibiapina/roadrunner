@@ -1,5 +1,6 @@
 #[derive(PartialEq, Debug)]
 pub struct Section {
+    pub name: Option<String>,
     pub parts: Vec<Part>,
 }
 

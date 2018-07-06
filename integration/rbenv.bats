@@ -3,7 +3,7 @@
 load test_helper
 
 run_with_rbenv() {
-  ROADRUNNER_PROMPT="#{rbenv:(%version%)}" run $ROADRUNNER_BIN
+  ROADRUNNER_PROMPT="?rbenv:(#{version})" run $ROADRUNNER_BIN
 }
 
 @test "rbenv: when not in a rbenv repo" {
