@@ -1,29 +1,24 @@
 #[derive(PartialEq, Debug)]
-pub struct Literal(pub String);
-
-#[derive(PartialEq, Debug)]
-pub struct Placeholder<'a>(pub &'a str);
-
-#[derive(PartialEq, Debug)]
-pub struct Section<'a>(pub Vec<Expr<'a>>);
-
-#[derive(PartialEq, Debug)]
-pub struct Integration<'a> {
-    pub name: &'a str,
-    pub exprs: Vec<Expr<'a>>,
+pub struct Section {
+    pub parts: Vec<Part>,
 }
 
 #[derive(PartialEq, Debug)]
-pub enum Expr<'a> {
-    Literal(Literal),
-    Placeholder(Placeholder<'a>),
-    Section(Section<'a>),
-    Integration(Integration<'a>),
+pub enum Part {
+    Literal(String),
+    Interpolation(Expr),
 }
 
 #[derive(PartialEq, Debug)]
-pub struct Prompt<'a> {
-    pub exprs: Vec<Expr<'a>>,
+pub enum Expr {
+    FunctionCall(String, Vec<Expr>),
+    Variable(String),
+    String(String),
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Prompt {
+    pub sections: Vec<Section>,
 }
 
 pub trait Context {

@@ -8,7 +8,7 @@ fn test_literals_alphanumeric() {
 
 #[test]
 fn test_literals_symbols() {
-    assert_eq!(run("[@]:()"), "[@]:()");
+    assert_eq!(run("[@]:{}()"), "[@]:{}()");
 }
 
 #[test]

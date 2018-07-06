@@ -3,47 +3,84 @@ use nom::types::CompleteStr;
 
 use types::*;
 
-fn make_integration<'a>((name, exprs): (&'a str, Vec<Expr<'a>>)) -> Expr<'a> {
-    Expr::Integration(Integration {
-        name: name,
-        exprs: exprs,
-    })
-}
-
 pub fn parse(value: &str) -> Prompt {
     prompt(CompleteStr(value)).unwrap().1
 }
 
-named!(literal<CompleteStr, Expr>,
-        map!(
-            is_not!("{}%#"),
-            |s| Expr::Literal(Literal(s.0.to_owned()))
-        )
+named!(literal<CompleteStr, Part>,
+    map!(
+        many_till!(
+            take!(1),
+            peek!(
+                alt!(
+                    tag!(";")  |
+                    tag!("#{") |
+                    eof!()
+                )
+            )
+        ),
+        |(strs, _)| Part::Literal(strs.iter().map(|s| s.0.to_owned()).collect::<Vec<_>>().join(""))
+    )
 );
 
-named!(placeholder<CompleteStr, Expr>, map!(delimited!(char!('%'), nom::alphanumeric, char!('%')), |c| Expr::Placeholder(Placeholder(c.0))));
+named!(expr<CompleteStr, Expr>,
+    alt!(
+        function_call |
+        variable
+    )
+);
 
-named!(section<CompleteStr, Expr>, map!(delimited!(char!('{'), exprs, char!('}')), |c| Expr::Section(Section(c))));
+named!(args<CompleteStr, Vec<Expr>>,
+    delimited!(
+        char!('('),
+        many0!(expr),
+        char!(')')
+    )
+);
 
-named!(tagged_exprs<CompleteStr, (&str, Vec<Expr>)>, separated_pair!(map!(nom::alpha, |e| e.0), char!(':'), exprs));
+named!(function_call<CompleteStr, Expr>,
+    map!(
+        pair!(nom::alphanumeric, args),
+        |(name, args)| Expr::FunctionCall(name.0.to_owned(), args)
+    )
+);
 
-named!(integration<CompleteStr, Expr>, map!(delimited!(tag!("#{"), tagged_exprs, char!('}')), make_integration));
+named!(variable<CompleteStr, Expr>,
+    map!(
+        nom::alphanumeric,
+        |s| Expr::Variable(s.0.to_owned())
+    )
+);
 
-named!(exprs<CompleteStr, Vec<Expr>>,
-    many0!(
-        alt_complete!(
-            section     |
-            placeholder |
-            integration |
-            literal
-        )
+named!(interpolation<CompleteStr, Part>,
+    map!(
+        delimited!(tag!("#{"), expr, char!('}')),
+        |expr| Part::Interpolation(expr)
+    )
+);
+
+named!(section<CompleteStr, Section>,
+    map!(
+        many1!(
+            alt!(
+                interpolation |
+                literal
+            )
+        ),
+        |parts| Section { parts: parts }
     )
 );
 
 named!(prompt<CompleteStr, Prompt>,
-    map!(
-        exprs,
-        |exprs| Prompt { exprs: exprs }
+    alt!(
+        map!(
+            separated_list!(char!(';'), section),
+            |sections| Prompt { sections: sections }
+        ) |
+        map!(
+            eof!(),
+            |_| Prompt { sections: Vec::new() }
+        )
     )
 );
 
@@ -54,82 +91,23 @@ mod tests {
 
     #[test]
     fn test_literal() {
-        assert_eq!(literal(CompleteStr("String")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("String".to_owned()))));
-        assert_eq!(literal(CompleteStr("[]@  ()=")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("[]@  ()=".to_owned()))));
-        assert_eq!(literal(CompleteStr("a\nb")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("a\nb".to_owned()))));
-        assert_eq!(literal(CompleteStr("\u{1b}[39m")).unwrap(), (CompleteStr(""), Expr::Literal(Literal("\u{1b}[39m".to_owned()))));
-    }
-
-    #[test]
-    fn test_placeholder() {
-        assert_eq!(placeholder(CompleteStr("%hi%")).unwrap(), (CompleteStr(""), Expr::Placeholder(Placeholder("hi"))));
-        assert_eq!(placeholder(CompleteStr("%1234%")).unwrap(), (CompleteStr(""), Expr::Placeholder(Placeholder("1234"))));
+        assert_eq!(literal(CompleteStr("String")).unwrap(), (CompleteStr(""), Part::Literal("String".to_owned())));
+        assert_eq!(literal(CompleteStr("[]@{}  ()=")).unwrap(), (CompleteStr(""), Part::Literal("[]@{}  ()=".to_owned())));
+        assert_eq!(literal(CompleteStr("a\nb")).unwrap(), (CompleteStr(""), Part::Literal("a\nb".to_owned())));
+        assert_eq!(literal(CompleteStr("\u{1b}[39m")).unwrap(), (CompleteStr(""), Part::Literal("\u{1b}[39m".to_owned())));
     }
 
     #[test]
     fn test_section() {
-        assert_eq!(section(CompleteStr("{[%hi%]}")).unwrap(), (CompleteStr(""), Expr::Section(Section(vec![
-            Expr::Literal(Literal("[".to_owned())),
-            Expr::Placeholder(Placeholder("hi")),
-            Expr::Literal(Literal("]".to_owned())),
-        ]))));
-    }
-
-    #[test]
-    fn test_exprs() {
-        assert_eq!(exprs(CompleteStr("[%hi%]")).unwrap(), (CompleteStr(""), vec!(Expr::Literal(Literal("[".to_owned())), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]".to_owned())))));
-    }
-
-    #[test]
-    fn test_tagged_exprs() {
-        assert_eq!(tagged_exprs(CompleteStr("git:[%hi%]")).unwrap(), (CompleteStr(""), ("git", vec!(Expr::Literal(Literal("[".to_owned())), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]".to_owned()))))));
-    }
-
-    #[test]
-    fn test_integration() {
-        assert_eq!(integration(CompleteStr("#{git:[%hi%]}")).unwrap(), (CompleteStr(""), Expr::Integration(Integration { name: "git", exprs: vec!(Expr::Literal(Literal("[".to_owned())), Expr::Placeholder(Placeholder("hi")), Expr::Literal(Literal("]".to_owned()))) })));
+        assert_eq!(section(CompleteStr("part1#{name}part2")).unwrap(), (CompleteStr(""), Section { parts: vec![
+            Part::Literal("part1".to_owned()),
+            Part::Interpolation(Expr::Variable("name".to_owned())),
+            Part::Literal("part2".to_owned()),
+        ] }));
     }
 
     #[test]
     fn test_prompt() {
-        assert_eq!(prompt(CompleteStr("#{fg:%11%}#{rbenv:#{bg:%green%}%version%}#{fg:%22%}[]#{git:[%hi%{+-%status%}]}")).unwrap(), (CompleteStr(""), Prompt { exprs: vec![
-            Expr::Integration(Integration {
-                name: "fg",
-                exprs: vec![
-                    Expr::Placeholder(Placeholder("11")),
-                ]
-            }),
-            Expr::Integration(Integration {
-                name: "rbenv",
-                exprs: vec![
-                    Expr::Integration(Integration {
-                        name: "bg",
-                        exprs: vec![
-                            Expr::Placeholder(Placeholder("green")),
-                        ]
-                    }),
-                    Expr::Placeholder(Placeholder("version"))
-                ]
-            }),
-            Expr::Integration(Integration {
-                name: "fg",
-                exprs: vec![
-                    Expr::Placeholder(Placeholder("22")),
-                ]
-            }),
-            Expr::Literal(Literal("[]".to_owned())),
-            Expr::Integration(Integration {
-                name: "git",
-                exprs: vec![
-                    Expr::Literal(Literal("[".to_owned())),
-                    Expr::Placeholder(Placeholder("hi")),
-                    Expr::Section(Section(vec![
-                        Expr::Literal(Literal("+-".to_owned())),
-                        Expr::Placeholder(Placeholder("status")),
-                    ])),
-                    Expr::Literal(Literal("]".to_owned()))
-                ]
-            })
-        ]}));
+        assert_eq!(prompt(CompleteStr("")).unwrap(), (CompleteStr(""), Prompt { sections: Vec::new() }));
     }
 }
