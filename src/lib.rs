@@ -6,6 +6,6 @@ extern crate nom;
 mod types;
 mod parser;
 mod eval;
-mod utils;
 mod contexts;
+mod functions;
 pub mod engine;

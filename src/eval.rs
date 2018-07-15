@@ -3,7 +3,7 @@ extern crate termion;
 use self::termion::color;
 
 use types::*;
-use utils;
+use functions;
 
 pub fn eval(prompt: &Prompt) -> String {
     prompt.sections
@@ -55,9 +55,9 @@ fn eval_expr(expr: &Expr) -> Expr {
 
 fn invoke_function(name: &str, args: &[Expr]) -> Expr {
     match name {
-        "cwd" => Expr::String(utils::cwd()),
-        "hostname" => Expr::String(utils::hostname()),
-        "username" => Expr::String(utils::username()),
+        "cwd" => Expr::String(functions::cwd()),
+        "hostname" => Expr::String(functions::hostname()),
+        "username" => Expr::String(functions::username()),
         "fg" => {
             match args[0] {
                 Expr::String(ref value) => {
