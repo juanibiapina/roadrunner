@@ -8,36 +8,35 @@ use utils;
 pub fn eval(prompt: &Prompt) -> String {
     prompt.sections
         .iter()
-        .map(|section| eval_section(section))
-        .filter_map(|result| result.simplify())
+        .filter_map(|section| eval_section(section))
+        .map(|rendered_section| rendered_section.content)
         .collect::<Vec<String>>()
         .join("")
 }
 
-fn eval_section(section: &Section) -> EvalResult {
+fn eval_section(section: &Section) -> Option<RenderedSection> {
     match section.name {
-        Some(ref _name) => {
-            EvalResult::None
-        },
+        Some(ref _name) => None,
         None => {
-            EvalResult::Vec(
-                section.parts
-                    .iter()
-                    .map(|part| eval_part(part))
-                    .collect::<Vec<_>>()
-            )
+            Some(RenderedSection {
+                content: section.parts
+                            .iter()
+                            .filter_map(|part| eval_part(part))
+                            .collect::<Vec<_>>()
+                            .join("")
+            })
         },
     }
 }
 
-fn eval_part(part: &Part) -> EvalResult {
+fn eval_part(part: &Part) -> Option<String> {
     match part {
-        Part::Literal(value) => EvalResult::Some(value.to_owned()),
+        Part::Literal(value) => Some(value.to_owned()),
         Part::Interpolation(expr) => {
             let evaluated = eval_expr(expr);
             match evaluated {
-                Expr::String(value) => EvalResult::Some(value),
-                _ => EvalResult::None,
+                Expr::String(value) => Some(value),
+                _ => None,
             }
         },
     }

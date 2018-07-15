@@ -22,6 +22,11 @@ pub struct Prompt {
     pub sections: Vec<Section>,
 }
 
+#[derive(PartialEq, Debug)]
+pub struct RenderedSection {
+    pub content: String,
+}
+
 pub trait Context {
     fn eval(&self, expr: &str) -> EvalResult;
 }
