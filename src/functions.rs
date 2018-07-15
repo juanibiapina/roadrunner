@@ -1,7 +1,11 @@
+extern crate termion;
 extern crate hostname;
 extern crate users;
 
+use self::termion::color;
+
 use std::env;
+use types::*;
 
 pub fn hostname() -> String {
     hostname::get_hostname().unwrap()
@@ -32,5 +36,45 @@ pub fn cwd() -> String {
             }
         },
         Err(_) => "".to_owned(),
+    }
+}
+
+pub fn fg(args: &[Expr]) -> Expr {
+    match args[0] {
+        Expr::String(ref value) => {
+            match value.as_ref() {
+                "reset" => Expr::String(format!("{}", color::Fg(color::Reset))),
+                "red" => Expr::String(format!("{}", color::Fg(color::Red))),
+                "black" => Expr::String(format!("{}", color::Fg(color::Black))),
+                "green" => Expr::String(format!("{}", color::Fg(color::Green))),
+                "yellow" => Expr::String(format!("{}", color::Fg(color::Yellow))),
+                "blue" => Expr::String(format!("{}", color::Fg(color::Blue))),
+                "magenta" => Expr::String(format!("{}", color::Fg(color::Magenta))),
+                "cyan" => Expr::String(format!("{}", color::Fg(color::Cyan))),
+                "white" => Expr::String(format!("{}", color::Fg(color::White))),
+                _ => Expr::String("".to_owned()),
+            }
+        },
+        _ => Expr::String("".to_owned()),
+    }
+}
+
+pub fn bg(args: &[Expr]) -> Expr {
+    match args[0] {
+        Expr::String(ref value) => {
+            match value.as_ref() {
+                "reset" => Expr::String(format!("{}", color::Bg(color::Reset))),
+                "red" => Expr::String(format!("{}", color::Bg(color::Red))),
+                "black" => Expr::String(format!("{}", color::Bg(color::Black))),
+                "green" => Expr::String(format!("{}", color::Bg(color::Green))),
+                "yellow" => Expr::String(format!("{}", color::Bg(color::Yellow))),
+                "blue" => Expr::String(format!("{}", color::Bg(color::Blue))),
+                "magenta" => Expr::String(format!("{}", color::Bg(color::Magenta))),
+                "cyan" => Expr::String(format!("{}", color::Bg(color::Cyan))),
+                "white" => Expr::String(format!("{}", color::Bg(color::White))),
+                _ => Expr::String("".to_owned()),
+            }
+        },
+        _ => Expr::String("".to_owned()),
     }
 }
