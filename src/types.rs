@@ -40,12 +40,5 @@ impl EvalResult {
             EvalResult::Vec(values) => Some(values.into_iter().filter_map(|v| v.simplify()).collect::<Vec<String>>().join("")),
         }
     }
-
-    pub fn is_none(&self) -> bool {
-        match self {
-            EvalResult::None => true,
-            _ => false,
-        }
-    }
 }
 

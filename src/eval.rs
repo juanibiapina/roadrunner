@@ -16,7 +16,7 @@ pub fn eval(prompt: &Prompt) -> String {
 
 fn eval_section(section: &Section) -> EvalResult {
     match section.name {
-        Some(ref name) => {
+        Some(ref _name) => {
             EvalResult::None
         },
         None => {
