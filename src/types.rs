@@ -10,7 +10,7 @@ pub enum Part {
     Interpolation(Expr),
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Expr {
     FunctionCall(String, Vec<Expr>),
     Variable(String),
@@ -25,10 +25,6 @@ pub struct Prompt {
 #[derive(PartialEq, Debug)]
 pub struct RenderedSection {
     pub content: String,
-}
-
-pub trait Context {
-    fn eval(&self, expr: &str) -> EvalResult;
 }
 
 pub enum EvalResult {

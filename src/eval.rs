@@ -1,23 +1,26 @@
 use types::*;
+use context::Context;
 use functions;
 
 pub fn eval(prompt: &Prompt) -> String {
+    let top_level_context = Context::top_level();
+
     prompt.sections
         .iter()
-        .filter_map(|section| eval_section(section))
+        .filter_map(|section| eval_section(&top_level_context, section))
         .map(|rendered_section| rendered_section.content)
         .collect::<Vec<String>>()
         .join("")
 }
 
-fn eval_section(section: &Section) -> Option<RenderedSection> {
+fn eval_section(context: &Context, section: &Section) -> Option<RenderedSection> {
     match section.name {
         Some(ref _name) => None,
         None => {
             Some(RenderedSection {
                 content: section.parts
                             .iter()
-                            .filter_map(|part| eval_part(part))
+                            .filter_map(|part| eval_part(context, part))
                             .collect::<Vec<_>>()
                             .join("")
             })
@@ -25,11 +28,11 @@ fn eval_section(section: &Section) -> Option<RenderedSection> {
     }
 }
 
-fn eval_part(part: &Part) -> Option<String> {
+fn eval_part(context: &Context, part: &Part) -> Option<String> {
     match part {
         Part::Literal(value) => Some(value.to_owned()),
         Part::Interpolation(expr) => {
-            let evaluated = eval_expr(expr);
+            let evaluated = eval_expr(context, expr);
             match evaluated {
                 Expr::String(value) => Some(value),
                 _ => None,
@@ -38,13 +41,13 @@ fn eval_part(part: &Part) -> Option<String> {
     }
 }
 
-fn eval_expr(expr: &Expr) -> Expr {
+fn eval_expr(context: &Context, expr: &Expr) -> Expr {
     match expr {
         Expr::FunctionCall(name, args) => {
-            let evaluated_args = args.iter().map(eval_expr).collect::<Vec<_>>();
+            let evaluated_args = args.iter().map(|arg| eval_expr(context, arg)).collect::<Vec<_>>();
             invoke_function(name, evaluated_args.as_slice())
         },
-        Expr::Variable(name) => Expr::String(name.to_owned()),
+        Expr::Variable(name) => context.get(name),
         Expr::String(value) => Expr::String(value.to_owned()),
     }
 }
