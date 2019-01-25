@@ -1,5 +1,3 @@
-#![feature(path_ancestors)]
-
 #[macro_use]
 extern crate nom;
 

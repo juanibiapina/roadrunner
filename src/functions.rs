@@ -20,6 +20,7 @@ pub fn cwd() -> String {
         Ok(current) => {
             match current.to_str() {
                 Some(current) => {
+                    #[allow(deprecated)]
                     match env::home_dir() {
                         Some(home) => {
                             match home.to_str() {
