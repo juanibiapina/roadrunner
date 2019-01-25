@@ -5,6 +5,7 @@ extern crate maplit;
 
 mod types;
 mod context;
+mod contexts;
 mod parser;
 mod eval;
 mod functions;

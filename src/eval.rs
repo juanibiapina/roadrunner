@@ -1,5 +1,6 @@
 use types::*;
 use context::Context;
+use contexts::rbenv;
 use functions;
 
 pub fn eval(prompt: &Prompt) -> String {
@@ -15,7 +16,25 @@ pub fn eval(prompt: &Prompt) -> String {
 
 fn eval_section(context: &Context, section: &Section) -> Option<RenderedSection> {
     match section.name {
-        Some(ref _name) => None,
+        Some(ref name) => {
+            match name.as_ref() {
+                "rbenv" => {
+                    match rbenv::init(context) {
+                        Some(context) => {
+                            Some(RenderedSection {
+                                content: section.parts
+                                            .iter()
+                                            .filter_map(|part| eval_part(&context, part))
+                                            .collect::<Vec<_>>()
+                                            .join("")
+                            })
+                        },
+                        None => None,
+                    }
+                },
+                _ => panic!("Unknown section name"),
+            }
+        },
         None => {
             Some(RenderedSection {
                 content: section.parts

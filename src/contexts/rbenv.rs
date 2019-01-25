@@ -3,45 +3,34 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-use types::Context;
-use types::EvalResult;
+use context::Context;
+use types::Expr;
 
-pub struct RbenvContext {
-    version_file: PathBuf,
-}
+pub fn init<'a>(parent: &'a Context) -> Option<Context<'a>> {
+    let path = env::current_dir().unwrap();
 
-impl RbenvContext {
-    pub fn new() -> Option<RbenvContext> {
-        let path = env::current_dir().unwrap();
+    for path in path.ancestors() {
+        let mut version_file = PathBuf::from(path);
+        version_file.push(".ruby-version");
 
-        for path in path.ancestors() {
-            let mut version_file = PathBuf::from(path);
-            version_file.push(".ruby-version");
+        if version_file.exists() {
+            let version = version(version_file);
 
-            if version_file.exists() {
-                return Some(RbenvContext {
-                    version_file: version_file,
-                });
-            }
-        }
+            let mut context = Context::new(parent);
+            context.set("version", Expr::String(version));
 
-        None
-    }
-}
-
-impl Context for RbenvContext {
-    fn eval(&self, name: &str) -> EvalResult {
-        match name {
-            "version" => {
-                let mut file = File::open(&self.version_file).unwrap();
-
-                let mut contents = String::new();
-                file.read_to_string(&mut contents).unwrap();
-                EvalResult::Some(contents.trim().to_string())
-            },
-            _ => EvalResult::None,
+            return Some(context);
         }
     }
+
+    None
 }
 
+fn version(version_file: PathBuf) -> String {
+    let mut file = File::open(&version_file).unwrap();
 
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+
+    contents.trim().to_string()
+}

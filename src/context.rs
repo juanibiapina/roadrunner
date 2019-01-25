@@ -2,12 +2,20 @@ use std::collections::HashMap;
 
 use types::*;
 
-pub struct Context {
+pub struct Context<'a> {
     entries: HashMap<String, Expr>,
+    parent: Option<&'a Context<'a>>,
 }
 
-impl Context {
-    pub fn top_level() -> Context {
+impl<'a> Context<'a> {
+    pub fn new(parent: &'a Context) -> Context<'a> {
+        Context {
+            entries: HashMap::new(),
+            parent: Some(parent),
+        }
+    }
+
+    pub fn top_level() -> Context<'a> {
         let entries = hashmap!{
             "reset".to_owned() => Expr::String("reset".to_owned()),
             "black".to_owned() => Expr::String("black".to_owned()),
@@ -22,7 +30,12 @@ impl Context {
 
         Context {
             entries,
+            parent: None,
         }
+    }
+
+    pub fn set(&mut self, name: &str, value: Expr) {
+        self.entries.insert(name.to_owned(), value.clone());
     }
 
     pub fn get(&self, name: &str) -> Expr {
