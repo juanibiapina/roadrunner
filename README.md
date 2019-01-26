@@ -17,6 +17,13 @@ Output (with colors stripped):
 :) 
 ```
 
+Benchmark on my local machine using [hyperfine](https://github.com/sharkdp/hyperfine)
+
+```
+Time (mean ± σ):       9.6 ms ±   1.0 ms    [User: 3.5 ms, System: 4.1 ms]
+Range (min … max):     8.5 ms …  14.8 ms    250 runs
+```
+
 ## Usage
 
 Add the main binary to your path and export a `ROADRUNNER_PROMPT` environment
@@ -151,12 +158,3 @@ and `bg` functions to generate the escape code to change the prompt color.
   - Boolean: triggers when true
 - `fg(variable)`: Sets the foreground color
 - `bg(variable)`: Sets the background color
-
-## Performance
-
-Benchmark on my local machine using [hyperfine](https://github.com/sharkdp/hyperfine)
-
-```
-Time (mean ± σ):       9.6 ms ±   1.0 ms    [User: 3.5 ms, System: 4.1 ms]
-Range (min … max):     8.5 ms …  14.8 ms    250 runs
-```
