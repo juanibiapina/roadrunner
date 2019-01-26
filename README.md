@@ -104,7 +104,7 @@ Renders when current directory or any of its ancestors contain a
 Conditionals are areas delimited by `{` and `}`. By default a conditional will
 not render anything inside of it. In order to make it render, the `tr` function
 must be called inside an interpolation. This is useful to hide parts of the
-line if case some conditions are met.
+line in case some conditions are met.
 
 Examples that do not render anything:
 
@@ -125,7 +125,7 @@ appears inside an interpolation or any child conditionals render. Example:
 The outer conditional renders if any of the inner conditionals render. The
 inner conditionals render if `behind` is different than 0 and `ahead` is
 different than 0 respectively. Notice how the conditionals are used to hide the
-literal symbols in case they are not needed.
+literal arrow symbols in case they are not needed.
 
 ## Reference
 
@@ -135,18 +135,19 @@ Variables can be of type `String`, `Number` or `Boolean`.
 
 #### Colors:
 
-Variables for color names are always defined. They can be used with `fg`
-and `bg` functions to generate the escape code to change the prompt color.
+Variables for color names are always defined. They simply return the names of
+the colors as string. They can be used with `fg` and `bg` functions to generate
+the escape code to change the prompt color.
 
-- reset
-- black
-- red
-- green
-- yellow
-- blue
-- magenta
-- cyan
-- white
+- `reset`
+- `black`
+- `red`
+- `green`
+- `yellow`
+- `blue`
+- `magenta`
+- `cyan`
+- `white`
 
 ### Functions
 
