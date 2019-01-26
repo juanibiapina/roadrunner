@@ -39,7 +39,15 @@ impl<'a> Context<'a> {
     }
 
     pub fn get(&self, name: &str) -> Expr {
-        self.entries.get(name).unwrap().clone()
+        match self.entries.get(name) {
+            Some(value) => value.clone(),
+            None => {
+                match self.parent {
+                    Some(parent) => parent.get(name),
+                    None => panic!("Undefined variable: {}", name),
+                }
+            },
+        }
     }
 }
 
