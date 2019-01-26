@@ -17,7 +17,9 @@ Output (with colors stripped):
 :) 
 ```
 
-Benchmark on my local machine using [hyperfine](https://github.com/sharkdp/hyperfine)
+Benchmark on my local machine using
+[hyperfine](https://github.com/sharkdp/hyperfine). These numbers may very
+depending on the state of the git repo.
 
 ```
 Time (mean ± σ):       9.6 ms ±   1.0 ms    [User: 3.5 ms, System: 4.1 ms]
