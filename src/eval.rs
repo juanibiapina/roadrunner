@@ -25,6 +25,7 @@ fn eval_section(context: &Context, section: &Section) -> Option<RenderedSection>
                                 content: section.parts
                                             .iter()
                                             .filter_map(|part| eval_part(&context, part))
+                                            .map(|p| p.content)
                                             .collect::<Vec<_>>()
                                             .join("")
                             })
@@ -40,6 +41,7 @@ fn eval_section(context: &Context, section: &Section) -> Option<RenderedSection>
                 content: section.parts
                             .iter()
                             .filter_map(|part| eval_part(context, part))
+                            .map(|p| p.content)
                             .collect::<Vec<_>>()
                             .join("")
             })
@@ -47,14 +49,41 @@ fn eval_section(context: &Context, section: &Section) -> Option<RenderedSection>
     }
 }
 
-fn eval_part(context: &Context, part: &Part) -> Option<String> {
+fn eval_part(context: &Context, part: &Part) -> Option<RenderedPart> {
     match part {
-        Part::Literal(value) => Some(value.to_owned()),
+        Part::Literal(value) => Some(RenderedPart {
+            content: value.to_owned(),
+            trigger: false,
+        }),
         Part::Interpolation(expr) => {
             let evaluated = eval_expr(context, expr);
             match evaluated {
-                Expr::String(value) => Some(value),
-                _ => None,
+                Expr::String(value) => Some(RenderedPart {
+                    content: value,
+                    trigger: false,
+                }),
+                Expr::Trigger(value) => Some(RenderedPart {
+                    content: value,
+                    trigger: true,
+                }),
+                _ => panic!("Unexpected interpolation result"),
+            }
+        },
+        Part::Conditional(parts) => {
+            let rendered_parts = parts
+                .iter()
+                .filter_map(|part| eval_part(context, part))
+                .collect::<Vec<RenderedPart>>();
+
+            let render = rendered_parts.iter().fold(false, |acc, rendered_part| acc || rendered_part.trigger);
+
+            if render {
+                Some(RenderedPart {
+                    content: rendered_parts.into_iter().map(|p| p.content).collect::<Vec<String>>().join(""),
+                    trigger: true,
+                })
+            } else {
+                None
             }
         },
     }
@@ -68,6 +97,7 @@ fn eval_expr(context: &Context, expr: &Expr) -> Expr {
         },
         Expr::Variable(name) => context.get(name),
         Expr::String(value) => Expr::String(value.to_owned()),
+        Expr::Trigger(value) => Expr::Trigger(value.to_owned()),
     }
 }
 
@@ -78,6 +108,7 @@ fn invoke_function(name: &str, args: &[Expr]) -> Expr {
         "username" => Expr::String(functions::username()),
         "fg" => functions::fg(args),
         "bg" => functions::bg(args),
-        _ => Expr::String("".to_owned()),
+        "tr" => functions::tr(args),
+        _ => panic!("Unknown function: `{}`", name),
     }
 }

@@ -15,6 +15,8 @@ named!(literal<CompleteStr, Part>,
                 alt!(
                     tag!(";")  |
                     tag!("#{") |
+                    tag!("}") |
+                    tag!("{") |
                     eof!()
                 )
             )
@@ -59,6 +61,23 @@ named!(interpolation<CompleteStr, Part>,
     )
 );
 
+named!(conditional<CompleteStr, Part>,
+    map!(
+        delimited!(char!('{'), parts, char!('}')),
+        |parts| Part::Conditional(parts)
+    )
+);
+
+named!(parts<CompleteStr, Vec<Part>>,
+    many0!(
+        alt!(
+            interpolation |
+            conditional   |
+            literal
+        )
+    )
+);
+
 named!(section<CompleteStr, Section>,
     map!(
         pair!(
@@ -71,6 +90,7 @@ named!(section<CompleteStr, Section>,
             many1!(
                 alt!(
                     interpolation |
+                    conditional   |
                     literal
                 )
             )
@@ -100,9 +120,23 @@ mod tests {
     #[test]
     fn test_literal() {
         assert_eq!(literal(CompleteStr("String")).unwrap(), (CompleteStr(""), Part::Literal("String".to_owned())));
-        assert_eq!(literal(CompleteStr("[]@{}  ()=")).unwrap(), (CompleteStr(""), Part::Literal("[]@{}  ()=".to_owned())));
+        assert_eq!(literal(CompleteStr("[]@  ()=")).unwrap(), (CompleteStr(""), Part::Literal("[]@  ()=".to_owned())));
         assert_eq!(literal(CompleteStr("a\nb")).unwrap(), (CompleteStr(""), Part::Literal("a\nb".to_owned())));
         assert_eq!(literal(CompleteStr("\u{1b}[39m")).unwrap(), (CompleteStr(""), Part::Literal("\u{1b}[39m".to_owned())));
+    }
+
+    #[test]
+    fn test_conditional() {
+        assert_eq!(conditional(CompleteStr("{}")).unwrap(), (CompleteStr(""), Part::Conditional(Vec::new())));
+        assert_eq!(conditional(CompleteStr("{{}}")).unwrap(), (CompleteStr(""), Part::Conditional(vec![
+            Part::Conditional(Vec::new()),
+        ])));
+        assert_eq!(conditional(CompleteStr("{ab {ab}}")).unwrap(), (CompleteStr(""), Part::Conditional(vec![
+            Part::Literal("ab ".to_owned()),
+            Part::Conditional(vec![
+                Part::Literal("ab".to_owned()),
+            ]),
+        ])));
     }
 
     #[test]

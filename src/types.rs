@@ -8,12 +8,14 @@ pub struct Section {
 pub enum Part {
     Literal(String),
     Interpolation(Expr),
+    Conditional(Vec<Part>),
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Expr {
     FunctionCall(String, Vec<Expr>),
     Variable(String),
+    Trigger(String),
     String(String),
 }
 
@@ -25,6 +27,12 @@ pub struct Prompt {
 #[derive(PartialEq, Debug)]
 pub struct RenderedSection {
     pub content: String,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct RenderedPart {
+    pub content: String,
+    pub trigger: bool,
 }
 
 pub enum EvalResult {

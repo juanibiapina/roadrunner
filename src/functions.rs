@@ -53,7 +53,7 @@ pub fn fg(args: &[Expr]) -> Expr {
                 "magenta" => Expr::String(format!("{}", color::Fg(color::Magenta))),
                 "cyan" => Expr::String(format!("{}", color::Fg(color::Cyan))),
                 "white" => Expr::String(format!("{}", color::Fg(color::White))),
-                _ => Expr::String("".to_owned()),
+                _ => panic!("Unknown color: {}", value),
             }
         },
         _ => Expr::String("".to_owned()),
@@ -73,9 +73,16 @@ pub fn bg(args: &[Expr]) -> Expr {
                 "magenta" => Expr::String(format!("{}", color::Bg(color::Magenta))),
                 "cyan" => Expr::String(format!("{}", color::Bg(color::Cyan))),
                 "white" => Expr::String(format!("{}", color::Bg(color::White))),
-                _ => Expr::String("".to_owned()),
+                _ => panic!("Unknown color: {}", value),
             }
         },
         _ => Expr::String("".to_owned()),
+    }
+}
+
+pub fn tr(args: &[Expr]) -> Expr {
+    match args[0] {
+        Expr::String(ref value) => Expr::Trigger(value.to_owned()),
+        _ => Expr::Trigger("".to_owned()),
     }
 }
