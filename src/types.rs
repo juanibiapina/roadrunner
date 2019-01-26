@@ -1,21 +1,38 @@
-extern crate rlua;
-
-use std::io;
-
-#[derive(Debug)]
-pub enum Error {
-    ScriptError(rlua::Error),
-    IoError(io::Error),
+#[derive(PartialEq, Debug)]
+pub struct Section {
+    pub name: Option<String>,
+    pub parts: Vec<Part>,
 }
 
-impl From<rlua::Error> for Error {
-    fn from(err: rlua::Error) -> Error {
-        Error::ScriptError(err)
-    }
+#[derive(PartialEq, Debug)]
+pub enum Part {
+    Literal(String),
+    Interpolation(Expr),
+    Conditional(Vec<Part>),
 }
 
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::IoError(err)
-    }
+#[derive(PartialEq, Debug, Clone)]
+pub enum Expr {
+    FunctionCall(String, Vec<Expr>),
+    Variable(String),
+    Trigger(String),
+    String(String),
+    Number(u8),
+    Boolean(bool),
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Prompt {
+    pub sections: Vec<Section>,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct RenderedSection {
+    pub content: String,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct RenderedPart {
+    pub content: String,
+    pub trigger: bool,
 }

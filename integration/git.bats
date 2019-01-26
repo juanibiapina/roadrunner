@@ -3,37 +3,7 @@
 load test_helper
 
 run_with_git_config() {
-  cat > "$ROADRUNNER_SCRIPT" << RHAI
-result = ""
-git = git_init()
-if git:enabled() then
-  result = result .. "("
-  result = result .. git:head()
-  result = result .. " "
-  if git:behind() > 0 then
-    result = result .. "↓" .. git:behind()
-  end
-  if git:ahead() > 0 then
-    result = result .. "↑" .. git:ahead()
-  end
-  if git:index() > 0 then
-    result = result .. "●" .. git:index()
-  end
-  if git:wt() > 0 then
-    result = result .. "+" .. git:wt()
-  end
-  if git:untracked() > 0 then
-    result = result .. "…"
-  end
-  if git:index() == 0 and git:wt() == 0 and git:untracked() == 0 then
-    result = result .. "✓"
-  end
-  result = result .. ")"
-end
-
-return result
-RHAI
-  run $ROADRUNNER_BIN
+  ROADRUNNER_PROMPT="?git:(#{head}{ {↓#{tr(behind)}}{↑#{tr(ahead)}}}{ {●#{tr(index)}}{+#{tr(wt)}}{…#{tr(untracked)}}{✓#{tr(clean)}}})" run $ROADRUNNER_BIN
 }
 
 @test "git: when not in a git repo" {
@@ -65,27 +35,27 @@ RHAI
 
   run_with_git_config
   assert_success
-  assert_output "(master ↓2↑1✓)"
+  assert_output "(master ↓2↑1 ✓)"
 
   echo "line" >> README
   run_with_git_config
   assert_success
-  assert_output "(master ↓2↑1+1)"
+  assert_output "(master ↓2↑1 +1)"
 
   echo "other" >> FILE
   run_with_git_config
   assert_success
-  assert_output "(master ↓2↑1+2)"
+  assert_output "(master ↓2↑1 +2)"
 
   git add README
   run_with_git_config
   assert_success
-  assert_output "(master ↓2↑1●1+1)"
+  assert_output "(master ↓2↑1 ●1+1)"
 
   touch ANOTHER
   run_with_git_config
   assert_success
-  assert_output "(master ↓2↑1●1+1…)"
+  assert_output "(master ↓2↑1 ●1+1…)"
 }
 
 @test "git: when in a subdirectory of a git repo" {
