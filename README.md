@@ -1,11 +1,11 @@
 # Roadrunner
 
-A very fast and configurable prompt for shells.
+A fast and configurable prompt for shells.
 
 ## Overview
 
 ```sh
-$ export ROADRUNNER_PROMPT='#{fg:%reset%}[#{fg:%red%}%username%#{fg:%reset%}@#{fg:%magenta%}%hostname%#{fg:%reset%}:#{rbenv:#{fg:%green%}[Ruby %version%] }#{fg:%blue%}%cwd%#{git: #{fg:%reset%}({#{fg:%magenta%}%head%}{ #{fg:%reset%}{↓%behind%}{↑%ahead%}}{ {#{fg:%green%}●%index%}{#{fg:%red%}+%wt%}{#{fg:%reset%}…%untracked%}{#{fg:%green%}✓%clean%}}#{fg:%reset%})}#{fg:%reset%}]
+$ export ROADRUNNER_PROMPT='#{fg(reset)};[#{fg(red)}#{username()}#{fg(reset)}@#{fg(magenta)}#{hostname()}#{fg(reset)}:;?rbenv:#{fg(green)}[Ruby #{version}] ;#{fg(blue)}#{cwd()};?git: #{fg(reset)}({#{fg(magenta)}#{tr(head)}}{ #{fg(reset)}{↓#{tr(behind)}}{↑#{tr(ahead)}}}{ {#{fg(green)}●#{tr(index)}}{#{fg(red)}+#{tr(wt)}}{#{fg(reset)}…#{tr(untracked)}}{#{fg(green)}✓#{tr(clean)}}}#{fg(reset)});#{fg(reset)}]
 :) '
 $ roadrunner
 ```
@@ -34,7 +34,7 @@ PROMPT='$(roadrunner)'
 ## Syntax
 
 Configuration is done using the `ROADRUNNER_PROMPT` environment variable. There
-are four types of expressions: literals, placeholders, sections and integrations.
+are four types of expressions: literals, interpolations, sections and conditionals.
 
 ### Literals
 
@@ -42,75 +42,112 @@ Literals as written out exactly as passed. All characters are allowed except:
 
 - `{`
 - `}`
-- `%`
+- `;`
 
-### Placeholders - `%name%`
+### Interpolations
 
-Placeholders are surrounded by `%`. They are predefined and will cause an error
-if they cannot be resolved. Currently available placeholders are:
+Interpolations are delimited by `#{` and `}`. Inside an interpolation variables can be referenced and functions can be called. Example:
 
-- `%cwd%`: Path of current working directory ($HOME is replaced with `~`)
-- `%hostname%`: Machine hostname
-- `%username%`: Current user name
+`ROADRUNNER_PROMPT=#{username()}` => `juanibiapina`
 
-More placeholders are available inside specific integrations.
+### Sections
 
-### Sections - `{...}`
+Sections are conceptual divisions in the prompt line. They are simply separated
+by `;`. The `;` character itself is not rendered. Example:
 
-Sections are optional parts. They are only rendered if at least one placeholder
-or nested section inside the section renders. Example:
+`part1;part2;part3` => `part1part2part3`
 
-```sh
-{Name is %name%}
-```
+A section can be tagged, in which case it has specific rules to render
+depending on the tag name. Example with the `rbenv` tag:
 
-If the placeholder `%name%` doesn't render anything, the whole section is
-ignored. Sections can be nested.
+`?rbenv:part1;part2` => `part1part2`
 
-### Integrations - `#{tag:...}`
+Inside the tagged section extra variables are defined.
 
-Integrations are delimited by `#{` and `}`. Inside an integration, a tag is used
-to identify the type of integration, which will determine if this integration
-will be rendered at all. After the tag followed by a `:`, any expression is
-allowed. Extra placeholders are defined for each integration.  Example:
+#### git section
 
-```
-$ export ROADRUNNER_PROMPT="#{git:(%head%)}"
-```
+Renders when the current directory or any of its ancestors is a git repository.
+It calls `git` once in order to get status and branch information. Since it
+checks for untracked files, it might be slow in big repositories. All variables
+are precalculated when the section is rendering, regardless of the variable
+being used.
 
-This outputs the current git HEAD in parenthesis if inside a git repository.
-Otherwise it prints nothing.
+Variables:
 
-#### `fg` and `bg` integrations
-
-These are integrations for rendering foreground and background colors. Inside
-them, placeholders are defined for each of the terminal color names and
-`reset`. Examples:
-
-- `#{fg:%red%}` - foreground color red
-- `#{bg:%blue%}` - background color blue
-- `#{fg:%reset%}` - reset foreground color
-
-#### git integration
-
-Triggers when current directory or any of its ancestors is a git repository. It
-calls `git` once in order to get status and branch information. Since it checks
-for untracked files, it might be slow in big repositories. All placeholders are
-precalculated when the integration is triggered, regardless of being used.
-Placeholders:
-
-- `%head%`: Current git HEAD (usually current branch name)
-- `%behind%`: Shows number of commits from current branch behind its remote
-- `%ahead%`: Shows number of commits from current branch ahead of its remote
-- `%index%`: Number of files changed in index (staged)
-- `%wt%`: Number of files changed in working tree
-- `%untracked%`: Triggers if there are untracked files (but renders nothing)
-- `%clean%`: Triggers if there are no changes in index or working directory and
-  no untracked files (but renders nothing)
+- `head`: Current git HEAD (usually current branch name)
+- `behind`: Number of commits from current branch behind its remote
+- `ahead`: Number of commits from current branch ahead of its remote
+- `index`: Number of files changed in index (staged)
+- `wt`: Number of files changed in working tree
+- `untracked`: true if there are untracked files
+- `clean`: true if there are no changes in index or working directory and
+  no untracked files
 
 #### rbenv integration
 
-Triggers when current directory or any of its ancestors contain a
+Renders when current directory or any of its ancestors contain a
 `.ruby-version` file
 
-- `%version%`: The contents of the `.ruby-version` file
+- `version`: The contents of the `.ruby-version` file
+
+### Conditionals
+
+Conditionals are areas delimited by `{` and `}`. By default a conditional will
+not render anything inside of it. In order to make it render, the `tr` function
+must be called inside an interpolation. This is useful to hide parts of the
+line if case some conditions are met.
+
+Examples that do not render anything:
+
+- `{}`
+- `{text}`
+- `{#{red}}`
+
+Examples that render:
+
+- `{#{tr(red)}}` => `red`
+- `{text #{tr(red)}} => `text red`
+
+Conditionals can be nested. A parent conditional renders if at least one `tr`
+appears inside an interpolation or any child conditionals render. Example:
+
+`{ {↓#{tr(behind)}}{↑#{tr(ahead)}}}`
+
+The outer conditional renders if any of the inner conditionals render. The
+inner conditionals render if `behind` is different than 0 and `ahead` is
+different than 0 respectively. Notice how the conditionals are used to hide the
+literal symbols in case they are not needed.
+
+## Reference
+
+### Variables
+
+Variables can be of type `String`, `Number` or `Boolean`.
+
+#### Colors:
+
+Variables for color names are always defined. They can be used with `fg`
+and `bg` functions to generate the escape code to change the prompt color.
+
+- reset
+- black
+- red
+- green
+- yellow
+- blue
+- magenta
+- cyan
+- white
+
+### Functions
+
+- `cwd()`: Path of current working directory ($HOME is replaced with `~`)
+- `hostname()`: Machine hostname
+- `username()`: Current user name
+- `tr(variable)`: Triggers a rendering of the surrounding conditional according
+  to the value of the variable:
+  - String: triggers when non empty
+  - Numbers: triggers when different than 0
+  - Boolean: triggers when true
+- `fg(variable)`: Sets the foreground color
+- `bg(variable)`: Sets the background color
