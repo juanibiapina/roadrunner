@@ -17,6 +17,8 @@ pub enum Expr {
     Variable(String),
     Trigger(String),
     String(String),
+    Number(u8),
+    Boolean(bool),
 }
 
 #[derive(PartialEq, Debug)]
@@ -34,20 +36,3 @@ pub struct RenderedPart {
     pub content: String,
     pub trigger: bool,
 }
-
-pub enum EvalResult {
-    None,
-    Some(String),
-    Vec(Vec<EvalResult>),
-}
-
-impl EvalResult {
-    pub fn simplify(self) -> Option<String> {
-        match self {
-            EvalResult::None => None,
-            EvalResult::Some(value) => Some(value),
-            EvalResult::Vec(values) => Some(values.into_iter().filter_map(|v| v.simplify()).collect::<Vec<String>>().join("")),
-        }
-    }
-}
-

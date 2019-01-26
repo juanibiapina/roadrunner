@@ -82,7 +82,26 @@ pub fn bg(args: &[Expr]) -> Expr {
 
 pub fn tr(args: &[Expr]) -> Expr {
     match args[0] {
-        Expr::String(ref value) => Expr::Trigger(value.to_owned()),
+        Expr::String(ref value) => {
+            match value.as_ref() {
+                "" => Expr::String("".to_owned()),
+                _ => Expr::Trigger(value.to_owned()),
+            }
+        },
+        Expr::Number(n) => {
+            if n != 0 {
+                Expr::Trigger(n.to_string())
+            } else {
+                Expr::String("".to_owned())
+            }
+        }
+        Expr::Boolean(v) => {
+            if v {
+                Expr::Trigger("".to_owned())
+            } else {
+                Expr::String("".to_owned())
+            }
+        }
         _ => Expr::Trigger("".to_owned()),
     }
 }

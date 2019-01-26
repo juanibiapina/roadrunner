@@ -1,6 +1,7 @@
 use types::*;
 use context::Context;
 use contexts::rbenv;
+use contexts::git;
 use functions;
 
 pub fn eval(prompt: &Prompt) -> String {
@@ -20,6 +21,21 @@ fn eval_section(context: &Context, section: &Section) -> Option<RenderedSection>
             match name.as_ref() {
                 "rbenv" => {
                     match rbenv::init(context) {
+                        Some(context) => {
+                            Some(RenderedSection {
+                                content: section.parts
+                                            .iter()
+                                            .filter_map(|part| eval_part(&context, part))
+                                            .map(|p| p.content)
+                                            .collect::<Vec<_>>()
+                                            .join("")
+                            })
+                        },
+                        None => None,
+                    }
+                },
+                "git" => {
+                    match git::init(context) {
                         Some(context) => {
                             Some(RenderedSection {
                                 content: section.parts
@@ -96,8 +112,10 @@ fn eval_expr(context: &Context, expr: &Expr) -> Expr {
             invoke_function(name, evaluated_args.as_slice())
         },
         Expr::Variable(name) => context.get(name),
-        Expr::String(value) => Expr::String(value.to_owned()),
-        Expr::Trigger(value) => Expr::Trigger(value.to_owned()),
+        Expr::Trigger(_) => expr.clone(),
+        Expr::String(_) => expr.clone(),
+        Expr::Number(_) => expr.clone(),
+        Expr::Boolean(_) => expr.clone(),
     }
 }
 
