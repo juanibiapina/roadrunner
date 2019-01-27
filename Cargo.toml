@@ -8,6 +8,7 @@ hostname = "*"
 users = "*"
 termion = "*"
 maplit = "*"
+clap = "*"
 
 [dependencies.nom]
 version = "^4.0"
