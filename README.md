@@ -26,11 +26,23 @@ Time (mean ± σ):       9.6 ms ±   1.0 ms    [User: 3.5 ms, System: 4.1 ms]
 Range (min … max):     8.5 ms …  14.8 ms    250 runs
 ```
 
+## Install
+
+### Homebrew
+
+```sh
+$ brew install juanibiapina/taps/roadrunner
+```
+
+### Other
+
+Download and extract the latest release from Github and put it in your `PATH`.
+
 ## Usage
 
-Add the main binary to your path and export a `ROADRUNNER_PROMPT` environment
-variable with your prompt configuration. Refer to the example in the overview
-and the syntax section for more details.
+Export a `ROADRUNNER_PROMPT` environment variable with your prompt
+configuration. Refer to the example in the overview and the syntax section for
+more details.
 
 ### Zsh
 
