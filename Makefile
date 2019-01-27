@@ -9,3 +9,11 @@ build:
 .PHONY: test
 test:
 	cargo test
+
+.PHONY: release
+release:
+	cargo build --release
+
+.PHONY: performance
+performance: release
+	hyperfine --warmup 10 ./target/release/roadrunner
