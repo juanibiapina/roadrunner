@@ -91,7 +91,7 @@ fn eval_part(context: &Context, part: &Part) -> Option<RenderedPart> {
                 .filter_map(|part| eval_part(context, part))
                 .collect::<Vec<RenderedPart>>();
 
-            let render = rendered_parts.iter().fold(false, |acc, rendered_part| acc || rendered_part.trigger);
+            let render = rendered_parts.iter().any(|rendered_part| rendered_part.trigger);
 
             if render {
                 Some(RenderedPart {
