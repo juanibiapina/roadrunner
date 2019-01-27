@@ -8,10 +8,10 @@ pub struct Context<'a> {
 }
 
 impl<'a> Context<'a> {
-    pub fn new(parent: &'a Context) -> Context<'a> {
+    pub fn new(parent: Option<&'a Context>) -> Context<'a> {
         Context {
             entries: HashMap::new(),
-            parent: Some(parent),
+            parent: parent,
         }
     }
 
@@ -34,7 +34,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    pub fn set(&mut self, name: &str, value: Expr) {
+    pub fn set(&mut self, name: &str, value: &Expr) {
         self.entries.insert(name.to_owned(), value.clone());
     }
 
@@ -51,3 +51,34 @@ impl<'a> Context<'a> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_context_no_parent() {
+        let mut context = Context::new(None);
+        let expr = Expr::String("whatever".to_owned());
+
+        context.set("name", &expr);
+
+        assert_eq!(context.get("name"), expr);
+    }
+
+    #[test]
+    fn test_context_with_one_parent() {
+        let parent = Context::top_level();
+        let context = Context::new(Some(&parent));
+
+        assert_eq!(context.get("red"), Expr::String("red".to_owned()));
+    }
+
+    #[test]
+    fn test_context_with_more_parents() {
+        let parent = Context::top_level();
+        let mid_context = Context::new(Some(&parent));
+        let context = Context::new(Some(&mid_context));
+
+        assert_eq!(context.get("red"), Expr::String("red".to_owned()));
+    }
+}

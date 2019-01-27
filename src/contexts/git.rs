@@ -90,20 +90,20 @@ pub fn init<'a>(parent: &'a Context) -> Option<Context<'a>> {
         }
     }
 
-    let mut context = Context::new(parent);
-    context.set("head", Expr::String(head.to_owned()));
+    let mut context = Context::new(Some(parent));
+    context.set("head", &Expr::String(head.to_owned()));
 
-    context.set("ahead", Expr::Number(ahead));
-    context.set("behind", Expr::Number(behind));
-    context.set("index", Expr::Number(index));
-    context.set("wt", Expr::Number(wt));
+    context.set("ahead", &Expr::Number(ahead));
+    context.set("behind", &Expr::Number(behind));
+    context.set("index", &Expr::Number(index));
+    context.set("wt", &Expr::Number(wt));
 
-    context.set("untracked", Expr::Boolean(untracked != 0));
+    context.set("untracked", &Expr::Boolean(untracked != 0));
 
     if index == 0 && wt == 0 && untracked == 0 {
-        context.set("clean", Expr::Boolean(true));
+        context.set("clean", &Expr::Boolean(true));
     } else {
-        context.set("clean", Expr::Boolean(false));
+        context.set("clean", &Expr::Boolean(false));
     }
 
     return Some(context);

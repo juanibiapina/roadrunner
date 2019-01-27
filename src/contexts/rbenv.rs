@@ -16,8 +16,8 @@ pub fn init<'a>(parent: &'a Context) -> Option<Context<'a>> {
         if version_file.exists() {
             let version = version(version_file);
 
-            let mut context = Context::new(parent);
-            context.set("version", Expr::String(version));
+            let mut context = Context::new(Some(parent));
+            context.set("version", &Expr::String(version));
 
             return Some(context);
         }
