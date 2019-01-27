@@ -18,51 +18,36 @@ pub fn eval(prompt: &Prompt) -> String {
 fn eval_section(context: &Context, section: &Section) -> Option<RenderedSection> {
     match section.name {
         Some(ref name) => {
-            match name.as_ref() {
-                "rbenv" => {
-                    match rbenv::init(context) {
-                        Some(context) => {
-                            Some(RenderedSection {
-                                content: section.parts
-                                            .iter()
-                                            .filter_map(|part| eval_part(&context, part))
-                                            .map(|p| p.content)
-                                            .collect::<Vec<_>>()
-                                            .join("")
-                            })
-                        },
-                        None => None,
-                    }
-                },
-                "git" => {
-                    match git::init(context) {
-                        Some(context) => {
-                            Some(RenderedSection {
-                                content: section.parts
-                                            .iter()
-                                            .filter_map(|part| eval_part(&context, part))
-                                            .map(|p| p.content)
-                                            .collect::<Vec<_>>()
-                                            .join("")
-                            })
-                        },
-                        None => None,
-                    }
-                },
+            let context = match name.as_ref() {
+                "rbenv" => rbenv::init(context),
+                "git" => git::init(context),
                 _ => panic!("Unknown section name"),
+            };
+
+            match context {
+                Some(context) => {
+                    Some(RenderedSection {
+                        content: eval_parts(&context, &section.parts),
+                    })
+                },
+                None => None,
             }
         },
         None => {
             Some(RenderedSection {
-                content: section.parts
-                            .iter()
-                            .filter_map(|part| eval_part(context, part))
-                            .map(|p| p.content)
-                            .collect::<Vec<_>>()
-                            .join("")
+                content: eval_parts(context, &section.parts),
             })
         },
     }
+}
+
+fn eval_parts(context: &Context, parts: &Vec<Part>) -> String {
+    parts
+        .iter()
+        .filter_map(|part| eval_part(context, part))
+        .map(|p| p.content)
+        .collect::<Vec<_>>()
+        .join("")
 }
 
 fn eval_part(context: &Context, part: &Part) -> Option<RenderedPart> {
