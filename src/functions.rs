@@ -12,7 +12,7 @@ pub fn hostname() -> String {
 }
 
 pub fn username() -> String {
-    users::get_current_username().unwrap()
+    users::get_current_username().unwrap().into_string().unwrap()
 }
 
 pub fn cwd() -> String {
