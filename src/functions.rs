@@ -8,7 +8,7 @@ use std::env;
 use types::*;
 
 pub fn hostname() -> String {
-    hostname::get_hostname().unwrap()
+    hostname::get().unwrap().into_string().unwrap()
 }
 
 pub fn username() -> String {

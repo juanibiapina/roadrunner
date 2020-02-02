@@ -1,6 +1,6 @@
 [package]
 name = "roadrunner"
-version = "2.1.0"
+version = "2.2.0"
 authors = ["Juan Ibiapina <juanibiapina@gmail.com>"]
 
 [dependencies]
