@@ -27,17 +27,3 @@ jobs:
         git config --global user.name "Example"
     - name: Run tests
       run: PATH="./bats/bin:$PATH" make
-    - name: Install cross
-      run: cargo install cross
-    - name: Create Linux release
-      on:
-        push:
-          tags:
-            - 'v*'
-      run: |
-        cross build --target x86_64-unknown-linux-gnu --release
-        mkdir dist
-        cp target/x86_64-unknown-linux-gnu/release/roadrunner dist/
-        cd dist
-        tar czf ../roadrunner-${GITHUB_REF#refs/tags/}-x86_64-unknown-linux-gnu.tar.gz *
-        ls
