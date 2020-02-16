@@ -43,4 +43,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/roadrunner-${{ github.ref }}-x86_64-unknown-linux-gnu.tar.gz
+        asset_name: roadrunner-${{ github.ref }}-x86_64-unknown-linux-gnu.tar.gz
         asset_content_type: application/gzip
