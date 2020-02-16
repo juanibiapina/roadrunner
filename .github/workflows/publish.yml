@@ -41,8 +41,9 @@ jobs:
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${GITHUB_REF#refs/tags/}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/roadrunner-${GITHUB_REF#refs/tags/}-x86_64-unknown-linux-gnu.tar.gz
-        asset_name: roadrunner-${GITHUB_REF#refs/tags/}-x86_64-unknown-linux-gnu.tar.gz
+        asset_path: dist/roadrunner-${TAG}-x86_64-unknown-linux-gnu.tar.gz
+        asset_name: roadrunner-${TAG}-x86_64-unknown-linux-gnu.tar.gz
         asset_content_type: application/gzip
