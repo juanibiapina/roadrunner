@@ -25,11 +25,19 @@ jobs:
         cp target/x86_64-unknown-linux-gnu/release/roadrunner dist/
         cd dist
         tar czf roadrunner-${GITHUB_REF#refs/tags/}-x86_64-unknown-linux-gnu.tar.gz *
-    - name: Upload Linux release
-      uses: Xotl/cool-github-releases@v1
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        mode: update
-        tag_name: ${GITHUB_REF#refs/tags/}
-        body_mrkdwn: ""
-        assets: dist/roadrunner-${GITHUB_REF#refs/tags/}-x86_64-unknown-linux-gnu.tar.gz
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        asset_path: dist/roadrunner-${{ github.ref }}-x86_64-unknown-linux-gnu.tar.gz
