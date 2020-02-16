@@ -10,6 +10,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Create Release
       run: |
         curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
