@@ -12,6 +12,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Create Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
         bin/hub release create -m ${GITHUB_REF#refs/tags/} ${GITHUB_REF#refs/tags/}
