@@ -27,6 +27,8 @@ jobs:
         tar czf roadrunner-${GITHUB_REF#refs/tags/}-x86_64-unknown-linux-gnu.tar.gz *
         cd ..
     - name: Create Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         curl -fsSL https://github.com/github/hub/raw/master/script/get | bash -s 2.14.1
         bin/hub release create -a "dist/roadrunner-${GITHUB_REF#refs/tags/}-x86_64-unknown-linux-gnu.tar.gz" -m ${GITHUB_REF#ref/tags/} ${GITHUB_REF#ref/tags/}
