@@ -1,5 +1,7 @@
 # Roadrunner
 
+*DEPRECATED* in favor or [starship](https://github.com/starship/starship)
+
 A fast and configurable prompt for shells.
 
 ## Overview
